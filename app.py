@@ -89,3 +89,11 @@ def login():
             return render_template('login.html')
 
         conn.close()
+        
+        if user_data and user_data[1] == password:
+            user = Usuario(user_data[0], nombre)
+            login_user(user)
+            return redirect(url_for('inicio'))
+        else:
+            flash('Credenciales incorrectas. Inténtalo de nuevo.')
+    return render_template('login.html')
