@@ -7,4 +7,9 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123" 
