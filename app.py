@@ -66,3 +66,26 @@ def login():
         if not nombre or not password:
             flash("Por favor, ingresa nombre de usuario y contraseña.")
             return render_template('login.html')
+        if nombre == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            admin_user = Usuario(id="admin", nombre=ADMIN_USERNAME, is_admin=True)
+            login_user(admin_user)
+            flash("Has iniciado sesión como administrador.")
+            return redirect(url_for('inicio'))
+
+        conn = conectar()
+        if not conn:
+            flash("No se pudo conectar a la base de datos.")
+            return render_template('login.html')
+
+        cursor = conn.cursor()
+        try:
+            query = f"SELECT id, password FROM usuarios WHERE nombre = '{nombre}'"
+            cursor.execute(query)
+            user_data = cursor.fetchone()
+        except pyodbc.Error as e:
+            print("Error en la ejecución de la consulta en login:", e)
+            flash(f"Error al ejecutar la consulta de inicio de sesión: {e}")
+            conn.close()
+            return render_template('login.html')
+
+        conn.close()
