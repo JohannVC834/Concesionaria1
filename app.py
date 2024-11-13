@@ -113,3 +113,20 @@ def registro():
         if not conn:
             flash("No se pudo conectar a la base de datos.")
             return render_template('registro.html')
+        
+        
+        cursor = conn.cursor()
+        try:
+            query = f"INSERT INTO usuarios (nombre, password) VALUES ('{nombre}', '{password}')"
+            cursor.execute(query)
+            conn.commit()
+            flash('Registro exitoso. Inicia sesión ahora.')
+        except pyodbc.Error as e:
+            print("Error al registrar el usuario:", e)
+            flash("Hubo un error al registrar el usuario.")
+        finally:
+            conn.close()
+
+        return redirect(url_for('login'))
+    
+    return render_template('registro.html')
