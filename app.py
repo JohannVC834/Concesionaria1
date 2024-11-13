@@ -38,3 +38,21 @@ def load_user(user_id):
     if not conn:
         print("No se pudo conectar a la base de datos en load_user.")
         return None
+    
+    cursor = conn.cursor()
+    try:
+        query = f"SELECT id, nombre FROM usuarios WHERE id = {user_id}"
+        cursor.execute(query)
+        user_data = cursor.fetchone()
+    except pyodbc.Error as e:
+        print("Error en la ejecución de la consulta en load_user:", e)
+        conn.close()
+        return None
+
+    conn.close()
+
+    if user_data:
+        return Usuario(user_data[0], user_data[1])
+    else:
+        print("No se encontró un usuario con id:", user_id)
+        return None
