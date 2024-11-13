@@ -33,3 +33,8 @@ def conectar():
 def load_user(user_id):
     if user_id == "admin":
         return Usuario(id="admin", nombre=ADMIN_USERNAME, is_admin=True)
+
+    conn = conectar()
+    if not conn:
+        print("No se pudo conectar a la base de datos en load_user.")
+        return None
