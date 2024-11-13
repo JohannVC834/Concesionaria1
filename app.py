@@ -56,3 +56,13 @@ def load_user(user_id):
     else:
         print("No se encontró un usuario con id:", user_id)
         return None
+    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        password = request.form.get('password')
+
+        if not nombre or not password:
+            flash("Por favor, ingresa nombre de usuario y contraseña.")
+            return render_template('login.html')
