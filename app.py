@@ -97,3 +97,19 @@ def login():
         else:
             flash('Credenciales incorrectas. Inténtalo de nuevo.')
     return render_template('login.html')
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        password = request.form.get('password')
+
+     
+        if not nombre or not password:
+            flash("Por favor, completa todos los campos.")
+            return render_template('registro.html')
+
+        conn = conectar()
+        if not conn:
+            flash("No se pudo conectar a la base de datos.")
+            return render_template('registro.html')
