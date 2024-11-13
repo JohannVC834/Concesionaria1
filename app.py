@@ -28,3 +28,8 @@ def conectar():
     except pyodbc.Error as e:
         print("Error al conectar a la base de datos:", e)
         return None
+    
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == "admin":
+        return Usuario(id="admin", nombre=ADMIN_USERNAME, is_admin=True)
