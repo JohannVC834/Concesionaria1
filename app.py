@@ -130,3 +130,16 @@ def registro():
         return redirect(url_for('login'))
     
     return render_template('registro.html')
+
+@app.route('/')
+@login_required
+def inicio():
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('login'))
+    
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, marca, modelo, anio, precio FROM vehiculos")
+    vehiculos = cursor.fetchall()
+    conn.close()
