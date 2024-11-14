@@ -1,0 +1,23 @@
+<!-- templates/registro.html -->
+{% extends "base.html" %}
+
+{% block title %}Registro - Concesionaria{% endblock %}
+
+{% block content %}
+<div class="card mx-auto" style="max-width: 400px;">
+    <div class="card-body">
+        <h3 class="card-title text-center">Registro</h3>
+        <form method="POST" action="{{ url_for('registro') }}">
+            <div class="form-group">
+                <label>Nombre de usuario:</label>
+                <input type="text" name="nombre" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-block">Registrarse</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
