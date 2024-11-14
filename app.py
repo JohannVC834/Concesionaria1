@@ -143,3 +143,31 @@ def inicio():
     cursor.execute("SELECT id, marca, modelo, anio, precio FROM vehiculos")
     vehiculos = cursor.fetchall()
     conn.close()
+    
+    return render_template('vehiculos.html', vehiculos=vehiculos, is_admin=current_user.is_admin)
+
+@app.route('/vehiculos/<int:id>')
+@login_required
+def detalle_vehiculo(id):
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('login'))
+
+    cursor = conn.cursor()
+    try:
+        query = f"SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion FROM vehiculos WHERE id = {id}"
+        cursor.execute(query)
+        vehiculo = cursor.fetchone()
+    except pyodbc.Error as e:
+        print("Error en la ejecución de la consulta en detalle_vehiculo:", e)
+        flash("Error al cargar los detalles del vehículo.")
+        return redirect(url_for('inicio'))
+    finally:
+        conn.close()
+
+    if not vehiculo:
+        flash("El vehículo no existe.")
+        return redirect(url_for('inicio'))
+
+    return render_template('detalle_vehiculo.html', vehiculo=vehiculo)
