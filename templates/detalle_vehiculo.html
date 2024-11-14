@@ -1,0 +1,21 @@
+<!-- templates/detalle_vehiculo.html -->
+{% extends "base.html" %}
+
+{% block title %}Detalles del Vehículo{% endblock %}
+
+{% block content %}
+<h2>Detalles del Vehículo</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">{{ vehiculo.marca }} {{ vehiculo.modelo }} ({{ vehiculo.anio }})</h4>
+        <p class="card-text"><strong>Precio:</strong> ${{ vehiculo.precio }}</p>
+        <p class="card-text"><strong>Color:</strong> {{ vehiculo.color }}</p>
+        <p class="card-text"><strong>Kilometraje:</strong> {{ vehiculo.kilometraje }} km</p>
+        <p class="card-text"><strong>Tipo:</strong> {{ vehiculo.tipo }}</p>
+        <p class="card-text"><strong>Transmisión:</strong> {{ vehiculo.transmision }}</p>
+        <p class="card-text"><strong>Descripción:</strong> {{ vehiculo.descripcion }}</p>
+        <a href="{{ url_for('inicio') }}" class="btn btn-primary">Volver a la Lista</a>
+    </div>
+</div>
+{% endblock %}
