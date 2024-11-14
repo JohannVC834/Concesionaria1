@@ -171,3 +171,41 @@ def detalle_vehiculo(id):
         return redirect(url_for('inicio'))
 
     return render_template('detalle_vehiculo.html', vehiculo=vehiculo)
+
+@app.route('/vehiculos/agregar', methods=['GET', 'POST'])
+@login_required
+def agregar_vehiculo():
+    if not current_user.is_admin:
+        flash("No tienes permiso para acceder a esta página.")
+        return redirect(url_for('inicio'))
+
+    if request.method == 'POST':
+        marca = request.form.get('marca')
+        modelo = request.form.get('modelo')
+        anio = request.form.get('anio')
+        precio = request.form.get('precio')
+        color = request.form.get('color')
+        kilometraje = request.form.get('kilometraje')
+        tipo = request.form.get('tipo')
+        transmision = request.form.get('transmision')
+        descripcion = request.form.get('descripcion')
+
+        conn = conectar()
+        if not conn:
+            flash("No se pudo conectar a la base de datos.")
+            return redirect(url_for('inicio'))
+
+        cursor = conn.cursor()
+        try:
+            query = f"INSERT INTO vehiculos (marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion) VALUES ('{marca}', '{modelo}', {anio}, {precio}, '{color}', {kilometraje}, '{tipo}', '{transmision}', '{descripcion}')"
+            cursor.execute(query)
+            conn.commit()
+            flash("Vehículo agregado con éxito.")
+        except pyodbc.Error as e:
+            print("Error al agregar el vehículo:", e)
+            flash("Hubo un error al agregar el vehículo.")
+        finally:
+            conn.close()
+        return redirect(url_for('inicio'))
+
+    return render_template('agregar_vehiculo.html')
