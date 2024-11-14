@@ -209,3 +209,29 @@ def agregar_vehiculo():
         return redirect(url_for('inicio'))
 
     return render_template('agregar_vehiculo.html')
+
+@app.route('/vehiculos/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_vehiculo(id):
+    if not current_user.is_admin:
+        flash("No tienes permiso para realizar esta acción.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+        query = f"DELETE FROM vehiculos WHERE id = {id}"
+        cursor.execute(query)
+        conn.commit()
+        flash("Vehículo eliminado con éxito.")
+    except pyodbc.Error as e:
+        print("Error al eliminar el vehículo:", e)
+        flash("Hubo un error al eliminar el vehículo.")
+    finally:
+        conn.close()
+    
+    return redirect(url_for('inicio'))
