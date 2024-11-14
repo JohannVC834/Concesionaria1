@@ -235,3 +235,13 @@ def eliminar_vehiculo(id):
         conn.close()
     
     return redirect(url_for('inicio'))
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("Has cerrado sesión.")
+    return redirect(url_for('login'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
