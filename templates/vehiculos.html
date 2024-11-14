@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Vehículos Disponibles{% endblock %}
+
+{% block content %}
+<h2>Vehículos Disponibles</h2>
+
+{% if is_admin %}
+<a href="{{ url_for('agregar_vehiculo') }}" class="btn btn-success mb-3">Agregar Vehículo</a>
+{% endif %}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Año</th>
+            <th>Precio</th>
+            <th>Detalles</th>
+            {% if is_admin %}
+            <th>Acciones</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for vehiculo in vehiculos %}
+        <tr>
+            <td>{{ vehiculo.marca }}</td>
+            <td>{{ vehiculo.modelo }}</td>
+            <td>{{ vehiculo.anio }}</td>
+            <td>${{ vehiculo.precio }}</td>
+            <td><a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="btn btn-info">Ver Detalles</a></td>
+            {% if is_admin %}
+            <td>
+                <form action="{{ url_for('eliminar_vehiculo', id=vehiculo.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este vehículo?');">Eliminar</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
