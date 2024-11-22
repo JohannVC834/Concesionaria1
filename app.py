@@ -249,31 +249,66 @@ def eliminar_vehiculo(id):
 @app.route('/buscar', methods=['GET'])
 @login_required
 def buscar_vehiculos():
-    query = request.args.get('query', '').strip()  # Obtén el término de búsqueda
-    if not query:
-        flash("Por favor, ingresa un término de búsqueda.")
-        return redirect(url_for('inicio'))
+    query = request.args.get('query', '').strip()  
+    precio_min = request.args.get('precio_min')
+    precio_max = request.args.get('precio_max')
+    anio_min = request.args.get('anio_min')
+    anio_max = request.args.get('anio_max')
+    kilometraje_max = request.args.get('kilometraje_max')
+    tipo = request.args.get('tipo')
+    orden = request.args.get('orden', 'precio')  
+
     conn = conectar()
     if not conn:
         flash("No se pudo conectar a la base de datos.")
         return redirect(url_for('inicio'))
+
     cursor = conn.cursor()
     try:
-        # Busca por marca o modelo
-        sql_query = f"""
-        SELECT id, marca, modelo, anio, precio 
-        FROM vehiculos 
-        WHERE marca LIKE '%{query}%' OR modelo LIKE '%{query}%'
+       
+        query_base = f"""
+        SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion
+        FROM vehiculos
+        WHERE 1=1
         """
-        cursor.execute(sql_query)
+
+        if query:
+            query_base += f" AND (marca LIKE '%{query}%' OR modelo LIKE '%{query}%')"
+        if precio_min:
+            query_base += f" AND precio >= {precio_min}"
+        if precio_max:
+            query_base += f" AND precio <= {precio_max}"
+        if anio_min:
+            query_base += f" AND anio >= {anio_min}"
+        if anio_max:
+            query_base += f" AND anio <= {anio_max}"
+        if kilometraje_max:
+            query_base += f" AND kilometraje <= {kilometraje_max}"
+        if tipo:
+            query_base += f" AND tipo LIKE '%{tipo}%'"
+
+       
+        if orden == 'precio':
+            query_base += " ORDER BY precio ASC"
+        elif orden == 'anio':
+            query_base += " ORDER BY anio DESC"
+
+        cursor.execute(query_base)
         vehiculos = cursor.fetchall()
+
+        
+        print(f"Consulta ejecutada: {query_base}")
+        print(f"Resultados obtenidos: {vehiculos}")
     except pyodbc.Error as e:
         print("Error al buscar vehículos:", e)
         flash("Hubo un error al realizar la búsqueda.")
         vehiculos = []
     finally:
         conn.close()
+
     return render_template('vehiculos.html', vehiculos=vehiculos, is_admin=current_user.is_admin)
+
+
 
 @app.route('/favoritos/agregar/<int:vehiculo_id>', methods=['POST'])
 @login_required
