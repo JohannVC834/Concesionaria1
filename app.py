@@ -240,16 +240,13 @@ def eliminar_vehiculo(id):
 @login_required
 def buscar_vehiculos():
     query = request.args.get('query', '').strip()  # Obtén el término de búsqueda
-
     if not query:
         flash("Por favor, ingresa un término de búsqueda.")
         return redirect(url_for('inicio'))
-
     conn = conectar()
     if not conn:
         flash("No se pudo conectar a la base de datos.")
         return redirect(url_for('inicio'))
-
     cursor = conn.cursor()
     try:
         # Busca por marca o modelo
@@ -266,9 +263,7 @@ def buscar_vehiculos():
         vehiculos = []
     finally:
         conn.close()
-
     return render_template('vehiculos.html', vehiculos=vehiculos, is_admin=current_user.is_admin)
-
 
 @app.route('/logout')
 @login_required
