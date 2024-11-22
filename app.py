@@ -236,6 +236,40 @@ def eliminar_vehiculo(id):
     
     return redirect(url_for('inicio'))
 
+@app.route('/buscar', methods=['GET'])
+@login_required
+def buscar_vehiculos():
+    query = request.args.get('query', '').strip()  # Obtén el término de búsqueda
+
+    if not query:
+        flash("Por favor, ingresa un término de búsqueda.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+        # Busca por marca o modelo
+        sql_query = f"""
+        SELECT id, marca, modelo, anio, precio 
+        FROM vehiculos 
+        WHERE marca LIKE '%{query}%' OR modelo LIKE '%{query}%'
+        """
+        cursor.execute(sql_query)
+        vehiculos = cursor.fetchall()
+    except pyodbc.Error as e:
+        print("Error al buscar vehículos:", e)
+        flash("Hubo un error al realizar la búsqueda.")
+        vehiculos = []
+    finally:
+        conn.close()
+
+    return render_template('vehiculos.html', vehiculos=vehiculos, is_admin=current_user.is_admin)
+
+
 @app.route('/logout')
 @login_required
 def logout():
