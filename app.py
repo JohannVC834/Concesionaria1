@@ -152,25 +152,35 @@ def detalle_vehiculo(id):
     conn = conectar()
     if not conn:
         flash("No se pudo conectar a la base de datos.")
-        return redirect(url_for('login'))
+        return redirect(url_for('inicio'))
 
     cursor = conn.cursor()
     try:
-        query = f"SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion FROM vehiculos WHERE id = {id}"
-        cursor.execute(query)
+        query_vehiculo = f"""
+        SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion
+        FROM vehiculos WHERE id = {id}
+        """
+        cursor.execute(query_vehiculo)
         vehiculo = cursor.fetchone()
+        query_comentarios = f"""
+        SELECT c.contenido, c.fecha, u.nombre
+        FROM comentarios c
+        JOIN usuarios u ON c.usuario_id = u.id
+        WHERE c.vehiculo_id = {id}
+        ORDER BY c.fecha DESC
+        """
+        cursor.execute(query_comentarios)
+        comentarios = cursor.fetchall()
     except pyodbc.Error as e:
-        print("Error en la ejecución de la consulta en detalle_vehiculo:", e)
-        flash("Error al cargar los detalles del vehículo.")
+        print("Error al obtener detalles del vehículo:", e)
+        flash("Hubo un error al cargar los detalles del vehículo.")
         return redirect(url_for('inicio'))
     finally:
         conn.close()
-
     if not vehiculo:
         flash("El vehículo no existe.")
         return redirect(url_for('inicio'))
-
-    return render_template('detalle_vehiculo.html', vehiculo=vehiculo)
+    return render_template('detalle_vehiculo.html', vehiculo=vehiculo, comentarios=comentarios)
 
 @app.route('/vehiculos/agregar', methods=['GET', 'POST'])
 @login_required
