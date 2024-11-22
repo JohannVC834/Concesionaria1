@@ -265,6 +265,42 @@ def buscar_vehiculos():
         conn.close()
     return render_template('vehiculos.html', vehiculos=vehiculos, is_admin=current_user.is_admin)
 
+@app.route('/favoritos/agregar/<int:vehiculo_id>', methods=['POST'])
+@login_required
+def agregar_favorito(vehiculo_id):
+    usuario_id = current_user.id  
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+
+        query_check = f"SELECT * FROM favoritos WHERE usuario_id = {usuario_id} AND vehiculo_id = {vehiculo_id}"
+        cursor.execute(query_check)
+        favorito_existente = cursor.fetchone()
+
+        if favorito_existente:
+            flash("El vehículo ya está en tus favoritos.")
+        else:
+            
+            query_insert = f"""
+                INSERT INTO favoritos (usuario_id, vehiculo_id)
+                VALUES ({usuario_id}, {vehiculo_id})
+            """
+            cursor.execute(query_insert)
+            conn.commit()
+            flash("Vehículo agregado a favoritos.")
+    except pyodbc.Error as e:
+        print("Error al agregar a favoritos:", e)
+        flash("Hubo un error al agregar a favoritos.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('inicio'))
+
+
 @app.route('/logout')
 @login_required
 def logout():
