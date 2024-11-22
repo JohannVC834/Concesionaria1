@@ -300,6 +300,37 @@ def agregar_favorito(vehiculo_id):
 
     return redirect(url_for('inicio'))
 
+@app.route('/favoritos', methods=['GET'])
+@login_required
+def ver_favoritos():
+    usuario_id = current_user.id  
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+       
+        query = f"""
+        SELECT v.id, v.marca, v.modelo, v.anio, v.precio
+        FROM favoritos f
+        JOIN vehiculos v ON f.vehiculo_id = v.id
+        WHERE f.usuario_id = {usuario_id}
+        """
+        cursor.execute(query)
+        favoritos = cursor.fetchall()
+
+        
+        print(f"Favoritos obtenidos para usuario_id={usuario_id}: {favoritos}")
+    except pyodbc.Error as e:
+        print("Error al obtener favoritos:", e)
+        flash("Hubo un error al cargar tus favoritos.")
+        favoritos = []
+    finally:
+        conn.close()
+
+    return render_template('favoritos.html', favoritos=favoritos)
 
 @app.route('/logout')
 @login_required
