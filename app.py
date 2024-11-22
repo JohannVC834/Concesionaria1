@@ -342,6 +342,38 @@ def ver_favoritos():
 
     return render_template('favoritos.html', favoritos=favoritos)
 
+@app.route('/vehiculos/<int:vehiculo_id>/comentarios/agregar', methods=['POST'])
+@login_required
+def agregar_comentario(vehiculo_id):
+    contenido = request.form.get('contenido', '').strip()
+    usuario_id = current_user.id  
+
+    if not contenido:
+        flash("El comentario no puede estar vacío.")
+        return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+    cursor = conn.cursor()
+    try:
+        query = f"""
+        INSERT INTO comentarios (usuario_id, vehiculo_id, contenido)
+        VALUES ({usuario_id}, {vehiculo_id}, '{contenido}')
+        """
+        cursor.execute(query)
+        conn.commit()
+        flash("Comentario agregado con éxito.")
+    except pyodbc.Error as e:
+        print("Error al agregar comentario:", e)
+        flash("Hubo un error al agregar tu comentario.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
 @app.route('/logout')
 @login_required
 def logout():
