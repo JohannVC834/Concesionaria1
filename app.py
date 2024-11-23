@@ -4,6 +4,8 @@ import pyodbc
 from config import DSN_NAME, DB_USER, DB_PASSWORD, SECRET_KEY
 import os
 from werkzeug.utils import secure_filename
+from flask import send_file
+from fpdf import FPDF
 UPLOAD_FOLDER = 'static/images'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
