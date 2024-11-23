@@ -171,31 +171,33 @@ def detalle_vehiculo(id):
 
     cursor = conn.cursor()
     try:
-        query_vehiculo = f"""
-        SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion
-        FROM vehiculos WHERE id = {id}
-        """
-        cursor.execute(query_vehiculo)
+        # Obtener datos del vehículo
+        cursor.execute(f"SELECT * FROM vehiculos WHERE id = {id}")
         vehiculo = cursor.fetchone()
-        query_comentarios = f"""
-        SELECT c.contenido, c.fecha, u.nombre
-        FROM comentarios c
-        JOIN usuarios u ON c.usuario_id = u.id
-        WHERE c.vehiculo_id = {id}
-        ORDER BY c.fecha DESC
-        """
-        cursor.execute(query_comentarios)
+
+        # Obtener comentarios relacionados
+        cursor.execute(f"""
+            SELECT c.contenido, c.fecha, u.nombre
+            FROM comentarios c
+            INNER JOIN usuarios u ON c.usuario_id = u.id
+            WHERE c.vehiculo_id = {id}
+            ORDER BY c.fecha DESC
+        """)
         comentarios = cursor.fetchall()
+
     except pyodbc.Error as e:
-        print("Error al obtener detalles del vehículo:", e)
+        print("Error al obtener los detalles:", e)
         flash("Hubo un error al cargar los detalles del vehículo.")
         return redirect(url_for('inicio'))
     finally:
         conn.close()
+
     if not vehiculo:
         flash("El vehículo no existe.")
         return redirect(url_for('inicio'))
+
     return render_template('detalle_vehiculo.html', vehiculo=vehiculo, comentarios=comentarios)
+
 
 @app.route('/vehiculos/agregar', methods=['GET', 'POST'])
 @login_required
