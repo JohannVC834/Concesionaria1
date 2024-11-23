@@ -550,6 +550,35 @@ def comprar_vehiculo(vehiculo_id):
 
     return redirect(url_for('inicio'))
 
+@app.route('/mis_compras')
+@login_required
+def ver_compras():
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener las compras del usuario
+        query = f"""
+        SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra
+        FROM compras c
+        JOIN vehiculos v ON c.vehiculo_id = v.id
+        WHERE c.usuario_id = {current_user.id}
+        """
+        cursor.execute(query)
+        compras = cursor.fetchall()
+    except pyodbc.Error as e:
+        print("Error al obtener compras:", e)
+        compras = []
+        flash("Hubo un error al cargar tus compras.")
+    finally:
+        conn.close()
+
+    return render_template('mis_compras.html', compras=compras)
+
 @app.route('/logout')
 @login_required
 def logout():
