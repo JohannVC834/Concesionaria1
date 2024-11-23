@@ -171,11 +171,9 @@ def detalle_vehiculo(id):
 
     cursor = conn.cursor()
     try:
-        # Obtener datos del vehículo
         cursor.execute(f"SELECT * FROM vehiculos WHERE id = {id}")
         vehiculo = cursor.fetchone()
 
-        # Obtener comentarios relacionados
         cursor.execute(f"""
             SELECT c.contenido, c.fecha, u.nombre
             FROM comentarios c
