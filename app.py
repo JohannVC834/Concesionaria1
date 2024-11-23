@@ -579,6 +579,110 @@ def ver_compras():
 
     return render_template('mis_compras.html', compras=compras)
 
+
+@app.route('/pago/<int:vehiculo_id>', methods=['GET', 'POST'])
+@login_required
+def datos_pago(vehiculo_id):
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener detalles del vehículo
+        cursor.execute(f"SELECT id, marca, modelo, precio FROM vehiculos WHERE id = {vehiculo_id}")
+        vehiculo = cursor.fetchone()
+
+        if not vehiculo:
+            flash("El vehículo no existe.")
+            return redirect(url_for('inicio'))
+
+        if request.method == 'POST':
+            # Simular la validación de datos de pago
+            nombre_tarjeta = request.form.get('nombre_tarjeta')
+            numero_tarjeta = request.form.get('numero_tarjeta')
+            fecha_expiracion = request.form.get('fecha_expiracion')
+            cvv = request.form.get('cvv')
+
+            if not all([nombre_tarjeta, numero_tarjeta, fecha_expiracion, cvv]):
+                flash("Por favor, completa todos los datos de pago.")
+                return render_template('pago.html', vehiculo=vehiculo)
+
+            # Registrar la compra
+            query = f"""
+            INSERT INTO compras (usuario_id, vehiculo_id, precio)
+            VALUES ({current_user.id}, {vehiculo_id}, {vehiculo[3]})
+            """
+            cursor.execute(query)
+            conn.commit()
+
+            flash("¡Compra realizada con éxito! Este vehículo ahora es tuyo.")
+            return redirect(url_for('ver_compras'))
+
+        return render_template('pago.html', vehiculo=vehiculo)
+
+    except pyodbc.Error as e:
+        print("Error al procesar el pago:", e)
+        flash("Hubo un error al procesar el pago.")
+        return redirect(url_for('inicio'))
+    finally:
+        conn.close()
+
+@app.route('/factura/<int:compra_id>', methods=['GET'])
+@login_required
+def generar_factura(compra_id):
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('ver_compras'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener los detalles de la compra
+        query = f"""
+        SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra, u.nombre
+        FROM compras c
+        JOIN vehiculos v ON c.vehiculo_id = v.id
+        JOIN usuarios u ON c.usuario_id = u.id
+        WHERE c.id = {compra_id} AND c.usuario_id = {current_user.id}
+        """
+        cursor.execute(query)
+        compra = cursor.fetchone()
+
+        if not compra:
+            flash("Compra no encontrada o no tienes permiso para verla.")
+            return redirect(url_for('ver_compras'))
+
+        # Crear el PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('Arial', 'B', 16)
+        pdf.cell(0, 10, 'Factura de Compra', 0, 1, 'C')
+        pdf.ln(10)
+
+        # Información de la compra
+        pdf.set_font('Arial', '', 12)
+        pdf.cell(0, 10, f"ID Compra: {compra[0]}", 0, 1)
+        pdf.cell(0, 10, f"Usuario: {compra[6]}", 0, 1)
+        pdf.cell(0, 10, f"Vehículo: {compra[1]} {compra[2]} ({compra[3]})", 0, 1)
+        pdf.cell(0, 10, f"Precio: ${compra[4]:,.2f}", 0, 1)
+        pdf.cell(0, 10, f"Fecha de Compra: {compra[5]}", 0, 1)
+
+        # Guardar el PDF temporalmente
+        factura_path = os.path.join(app.config['UPLOAD_FOLDER'], f"factura_{compra_id}.pdf")
+        pdf.output(factura_path)
+
+        return send_file(factura_path, as_attachment=True, download_name=f"factura_{compra_id}.pdf")
+    except pyodbc.Error as e:
+        print("Error al generar la factura:", e)
+        flash("Hubo un error al generar la factura.")
+        return redirect(url_for('ver_compras'))
+    finally:
+        conn.close()
+
 @app.route('/logout')
 @login_required
 def logout():
