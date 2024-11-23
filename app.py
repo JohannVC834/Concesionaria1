@@ -508,6 +508,48 @@ def agregar_comentario(vehiculo_id):
 
     return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
 
+@app.route('/comprar/<int:vehiculo_id>', methods=['POST'])
+@login_required
+def comprar_vehiculo(vehiculo_id):
+    if not current_user.is_authenticated:
+        flash("Debes iniciar sesión para comprar un vehículo.")
+        return redirect(url_for('login'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener información del vehículo
+        cursor.execute(f"SELECT precio FROM vehiculos WHERE id = {vehiculo_id}")
+        vehiculo = cursor.fetchone()
+
+        if not vehiculo:
+            flash("El vehículo no existe.")
+            return redirect(url_for('inicio'))
+
+        precio = vehiculo[0]
+
+        # Registrar la compra
+        query = f"""
+        INSERT INTO compras (usuario_id, vehiculo_id, precio)
+        VALUES ({current_user.id}, {vehiculo_id}, {precio})
+        """
+        cursor.execute(query)
+        conn.commit()
+
+        flash("¡Compra realizada con éxito! Este vehículo ahora es tuyo.")
+    except pyodbc.Error as e:
+        print("Error al registrar la compra:", e)
+        flash("Hubo un error al realizar la compra.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('inicio'))
+
 @app.route('/logout')
 @login_required
 def logout():
