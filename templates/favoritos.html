@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Tus Favoritos{% endblock %}
+
+{% block content %}
+<h2>Tus Vehículos Favoritos</h2>
+
+<!-- Botón para regresar al inicio -->
+<div class="mb-3">
+    <a href="{{ url_for('inicio') }}" class="btn btn-secondary">Volver al Inicio</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Año</th>
+            <th>Precio</th>
+            <th>Detalles</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vehiculo in favoritos %}
+        <tr>
+            <td>{{ vehiculo.marca }}</td>
+            <td>{{ vehiculo.modelo }}</td>
+            <td>{{ vehiculo.anio }}</td>
+            <td>${{ vehiculo.precio }}</td>
+            <td><a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="btn btn-info">Ver Detalles</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
