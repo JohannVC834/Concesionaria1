@@ -209,11 +209,18 @@ def agregar_vehiculo():
         modelo = request.form.get('modelo')
         anio = request.form.get('anio')
         precio = request.form.get('precio')
-        color = request.form.get('color')
-        kilometraje = request.form.get('kilometraje')
-        tipo = request.form.get('tipo')
-        transmision = request.form.get('transmision')
-        descripcion = request.form.get('descripcion')
+        imagen = request.files.get('imagen')
+
+
+        if not marca or not modelo or not anio or not precio:
+            flash("Por favor, completa todos los campos obligatorios.")
+            return redirect(url_for('agregar_vehiculo'))
+
+        imagen_ruta = None
+        if imagen and allowed_file(imagen.filename):
+            filename = secure_filename(imagen.filename)
+            imagen_ruta = f"images/{filename}"  
+            imagen.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         conn = conectar()
         if not conn:
@@ -222,7 +229,10 @@ def agregar_vehiculo():
 
         cursor = conn.cursor()
         try:
-            query = f"INSERT INTO vehiculos (marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion) VALUES ('{marca}', '{modelo}', {anio}, {precio}, '{color}', {kilometraje}, '{tipo}', '{transmision}', '{descripcion}')"
+            query = f"""
+            INSERT INTO vehiculos (marca, modelo, anio, precio, imagen)
+            VALUES ('{marca}', '{modelo}', {anio}, {precio}, '{imagen_ruta}')
+            """
             cursor.execute(query)
             conn.commit()
             flash("Vehículo agregado con éxito.")
@@ -231,6 +241,7 @@ def agregar_vehiculo():
             flash("Hubo un error al agregar el vehículo.")
         finally:
             conn.close()
+
         return redirect(url_for('inicio'))
 
     return render_template('agregar_vehiculo.html')
