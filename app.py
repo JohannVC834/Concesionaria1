@@ -2,9 +2,16 @@ from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
 import pyodbc
 from config import DSN_NAME, DB_USER, DB_PASSWORD, SECRET_KEY
+import os
+from werkzeug.utils import secure_filename
+UPLOAD_FOLDER = 'static/images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 login_manager = LoginManager(app)
