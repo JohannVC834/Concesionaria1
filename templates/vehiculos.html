@@ -5,6 +5,48 @@
 {% block content %}
 <h2>Vehículos Disponibles</h2>
 
+<form action="{{ url_for('buscar_vehiculos') }}" method="GET" class="mb-3">
+    <div class="row">
+        <div class="col-md-3">
+            <input type="text" class="form-control" name="query" placeholder="Buscar por marca o modelo..." value="{{ request.args.get('query', '') }}">
+        </div>
+        <div class="col-md-2">
+            <input type="number" class="form-control" name="precio_min" placeholder="Precio Mínimo" value="{{ request.args.get('precio_min', '') }}">
+        </div>
+        <div class="col-md-2">
+            <input type="number" class="form-control" name="precio_max" placeholder="Precio Máximo" value="{{ request.args.get('precio_max', '') }}">
+        </div>
+        <div class="col-md-2">
+            <input type="number" class="form-control" name="anio_min" placeholder="Año Mínimo" value="{{ request.args.get('anio_min', '') }}">
+        </div>
+        <div class="col-md-2">
+            <input type="number" class="form-control" name="anio_max" placeholder="Año Máximo" value="{{ request.args.get('anio_max', '') }}">
+        </div>
+        <div class="col-md-3 mt-2">
+            <input type="number" class="form-control" name="kilometraje_max" placeholder="Kilometraje Máximo" value="{{ request.args.get('kilometraje_max', '') }}">
+        </div>
+        <div class="col-md-3 mt-2">
+            <input type="text" class="form-control" name="tipo" placeholder="Tipo de Vehículo" value="{{ request.args.get('tipo', '') }}">
+        </div>
+        <div class="col-md-3 mt-2">
+            <select class="form-control" name="orden">
+                <option value="precio" {% if request.args.get('orden') == 'precio' %}selected{% endif %}>Ordenar por Precio</option>
+                <option value="anio" {% if request.args.get('orden') == 'anio' %}selected{% endif %}>Ordenar por Año</option>
+            </select>
+        </div>
+        <div class="col-md-2 mt-2">
+            <button class="btn btn-primary w-100" type="submit">Buscar</button>
+        </div>
+    </div>
+</form>
+
+<!-- Botón para "Ver Todos" solo si hay una búsqueda activa -->
+{% if request.args.get('query') %}
+<div class="mb-3">
+    <a href="{{ url_for('inicio') }}" class="btn btn-secondary">Ver Todos</a>
+</div>
+{% endif %}
+
 {% if is_admin %}
 <a href="{{ url_for('agregar_vehiculo') }}" class="btn btn-success mb-3">Agregar Vehículo</a>
 {% endif %}
@@ -12,33 +54,44 @@
 <table class="table table-striped">
     <thead>
         <tr>
+            <th>Imagen</th>
             <th>Marca</th>
             <th>Modelo</th>
             <th>Año</th>
             <th>Precio</th>
             <th>Detalles</th>
-            {% if is_admin %}
             <th>Acciones</th>
-            {% endif %}
         </tr>
     </thead>
     <tbody>
         {% for vehiculo in vehiculos %}
         <tr>
+            <td>
+                {% if vehiculo.imagen %}
+                <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
+                     alt="Imagen de {{ vehiculo.marca }}" 
+                     style="width: 100px; height: auto;">
+                {% else %}
+                <span>Sin Imagen</span>
+                {% endif %}
+            </td>
             <td>{{ vehiculo.marca }}</td>
             <td>{{ vehiculo.modelo }}</td>
             <td>{{ vehiculo.anio }}</td>
             <td>${{ vehiculo.precio }}</td>
             <td><a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="btn btn-info">Ver Detalles</a></td>
-            {% if is_admin %}
             <td>
+                <form action="{{ url_for('agregar_favorito', vehiculo_id=vehiculo.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-warning">Favorito</button>
+                </form>
+                {% if is_admin %}
                 <form action="{{ url_for('eliminar_vehiculo', id=vehiculo.id) }}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este vehículo?');">Eliminar</button>
                 </form>
+                {% endif %}
             </td>
-            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% endblock %}
+{% endblock %}
