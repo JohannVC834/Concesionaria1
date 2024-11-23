@@ -145,13 +145,21 @@ def inicio():
     if not conn:
         flash("No se pudo conectar a la base de datos.")
         return redirect(url_for('login'))
-    
+
     cursor = conn.cursor()
-    cursor.execute("SELECT id, marca, modelo, anio, precio FROM vehiculos")
-    vehiculos = cursor.fetchall()
-    conn.close()
-    
+    try:
+        query = "SELECT id, marca, modelo, anio, precio, imagen FROM vehiculos"
+        cursor.execute(query)
+        vehiculos = cursor.fetchall()
+    except pyodbc.Error as e:
+        print("Error al obtener vehículos:", e)
+        flash("Hubo un error al cargar los vehículos.")
+        vehiculos = []
+    finally:
+        conn.close()
+
     return render_template('vehiculos.html', vehiculos=vehiculos, is_admin=current_user.is_admin)
+
 
 @app.route('/vehiculos/<int:id>')
 @login_required
