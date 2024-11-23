@@ -81,6 +81,10 @@
             <td>${{ vehiculo.precio }}</td>
             <td><a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="btn btn-info">Ver Detalles</a></td>
             <td>
+                <form action="{{ url_for('datos_pago', vehiculo_id=vehiculo.id) }}" method="get" style="display:inline;">
+                    <button type="submit" class="btn btn-success">Comprar</button>
+                </form>
+                
                 <form action="{{ url_for('agregar_favorito', vehiculo_id=vehiculo.id) }}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-warning">Favorito</button>
                 </form>
