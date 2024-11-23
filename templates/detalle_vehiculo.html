@@ -1,4 +1,3 @@
-<!-- templates/detalle_vehiculo.html -->
 {% extends "base.html" %}
 
 {% block title %}Detalles del Vehículo{% endblock %}
@@ -6,8 +5,15 @@
 {% block content %}
 <h2>Detalles del Vehículo</h2>
 
-<div class="card">
+<div class="card mb-4">
     <div class="card-body">
+        {% if vehiculo.imagen %}
+        <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
+             alt="Imagen de {{ vehiculo.marca }}" 
+             class="img-fluid mb-3" style="max-width: 100%; height: auto;">
+        {% else %}
+        <p>Sin Imagen Disponible</p>
+        {% endif %}
         <h4 class="card-title">{{ vehiculo.marca }} {{ vehiculo.modelo }} ({{ vehiculo.anio }})</h4>
         <p class="card-text"><strong>Precio:</strong> ${{ vehiculo.precio }}</p>
         <p class="card-text"><strong>Color:</strong> {{ vehiculo.color }}</p>
@@ -18,4 +24,25 @@
         <a href="{{ url_for('inicio') }}" class="btn btn-primary">Volver a la Lista</a>
     </div>
 </div>
+
+<!-- Sección de comentarios -->
+<h3>Comentarios</h3>
+<ul class="list-group mb-4">
+    {% for comentario in comentarios %}
+    <li class="list-group-item">
+        <strong>{{ comentario.nombre }}</strong> dijo el {{ comentario.fecha.strftime('%d/%m/%Y %H:%M') }}:
+        <p>{{ comentario.contenido }}</p>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- Formulario para agregar comentarios -->
+<h4>Agregar un comentario</h4>
+<form action="{{ url_for('agregar_comentario', vehiculo_id=vehiculo.id) }}" method="POST">
+    <div class="mb-3">
+        <textarea name="contenido" class="form-control" rows="3" placeholder="Escribe tu comentario aquí..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Agregar Comentario</button>
+</form>
 {% endblock %}
+
