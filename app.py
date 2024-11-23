@@ -246,6 +246,79 @@ def agregar_vehiculo():
 
     return render_template('agregar_vehiculo.html')
 
+@app.route('/vehiculos/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_vehiculo(id):
+    if not current_user.is_admin:
+        flash("No tienes permiso para acceder a esta página.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        marca = request.form.get('marca', '').strip()
+        modelo = request.form.get('modelo', '').strip()
+        anio = request.form.get('anio', '').strip()
+        precio = request.form.get('precio', '').strip()
+        color = request.form.get('color', '').strip()
+        kilometraje = request.form.get('kilometraje', '').strip()
+        tipo = request.form.get('tipo', '').strip()
+        transmision = request.form.get('transmision', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        file = request.files.get('imagen')
+
+        try:
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                ruta_imagen = f"images/{filename}"
+                
+                query = f"""
+                UPDATE vehiculos
+                SET marca = '{marca}', modelo = '{modelo}', anio = {anio or 'NULL'}, precio = {precio or 'NULL'},
+                    color = '{color}', kilometraje = {kilometraje or 'NULL'}, tipo = '{tipo}', 
+                    transmision = '{transmision}', descripcion = '{descripcion}', imagen = '{ruta_imagen}'
+                WHERE id = {id}
+                """
+            else:
+                query = f"""
+                UPDATE vehiculos
+                SET marca = '{marca}', modelo = '{modelo}', anio = {anio or 'NULL'}, precio = {precio or 'NULL'},
+                    color = '{color}', kilometraje = {kilometraje or 'NULL'}, tipo = '{tipo}', 
+                    transmision = '{transmision}', descripcion = '{descripcion}'
+                WHERE id = {id}
+                """
+            print(f"Consulta SQL generada: {query}")
+            
+            cursor.execute(query)
+            conn.commit()
+            flash("Vehículo actualizado con éxito.")
+        except pyodbc.Error as e:
+            print("Error al actualizar el vehículo:", e)
+            flash("Hubo un error al actualizar el vehículo.")
+        finally:
+            conn.close()
+
+        return redirect(url_for('inicio'))
+
+    try:
+        cursor.execute(f"SELECT * FROM vehiculos WHERE id = {id}")
+        vehiculo = cursor.fetchone()
+    except pyodbc.Error as e:
+        print("Error al obtener el vehículo:", e)
+        flash("Hubo un error al cargar los datos del vehículo.")
+        return redirect(url_for('inicio'))
+    finally:
+        conn.close()
+
+    return render_template('editar_vehiculo.html', vehiculo=vehiculo)
+
 @app.route('/vehiculos/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar_vehiculo(id):
