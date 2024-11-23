@@ -32,6 +32,16 @@
                         <a class="nav-link" href="{{ url_for('registro') }}">Registro</a>
                     </li>
                 {% endif %}
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ver_favoritos') }}">Favoritos</a>
+                    </li>
+{% endif %}
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ver_compras') }}">Mis Compras</a>
+                    </li>
+{% endif %}
             </ul>
         </div>
     </nav>
