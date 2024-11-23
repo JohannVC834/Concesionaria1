@@ -4,22 +4,7 @@
 
 {% block content %}
 <h2>Vehículos Disponibles</h2>
-
 <!-- Formulario de búsqueda -->
-<form action="{{ url_for('buscar_vehiculos') }}" method="GET" class="mb-3">
-    <div class="input-group">
-        <input type="text" class="form-control" name="query" placeholder="Buscar por marca o modelo..." value="{{ query if query else '' }}" required>
-        <button class="btn btn-primary" type="submit">Buscar</button>
-    </div>
-</form>
-
-<!-- Botón para "Ver Todos" solo si hay una búsqueda activa -->
-{% if request.args.get('query') %}
-<div class="mb-3">
-    <a href="{{ url_for('inicio') }}" class="btn btn-secondary">Ver Todos</a>
-</div>
-{% endif %}
-
 {% if is_admin %}
 <a href="{{ url_for('agregar_vehiculo') }}" class="btn btn-success mb-3">Agregar Vehículo</a>
 {% endif %}
@@ -27,33 +12,44 @@
 <table class="table table-striped">
     <thead>
         <tr>
+            <th>Imagen</th>
             <th>Marca</th>
             <th>Modelo</th>
             <th>Año</th>
             <th>Precio</th>
             <th>Detalles</th>
-            {% if is_admin %}
             <th>Acciones</th>
-            {% endif %}
         </tr>
     </thead>
     <tbody>
         {% for vehiculo in vehiculos %}
         <tr>
+            <td>
+                {% if vehiculo.imagen %}
+                <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
+                     alt="Imagen de {{ vehiculo.marca }}" 
+                     style="width: 100px; height: auto;">
+                {% else %}
+                <span>Sin Imagen</span>
+                {% endif %}
+            </td>
             <td>{{ vehiculo.marca }}</td>
             <td>{{ vehiculo.modelo }}</td>
             <td>{{ vehiculo.anio }}</td>
             <td>${{ vehiculo.precio }}</td>
             <td><a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="btn btn-info">Ver Detalles</a></td>
-            {% if is_admin %}
             <td>
+                <form action="{{ url_for('agregar_favorito', vehiculo_id=vehiculo.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-warning">Favorito</button>
+                </form>
+                {% if is_admin %}
                 <form action="{{ url_for('eliminar_vehiculo', id=vehiculo.id) }}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este vehículo?');">Eliminar</button>
                 </form>
+                {% endif %}
             </td>
-            {% endif %}
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% endblock %}
+{% endblock %}
