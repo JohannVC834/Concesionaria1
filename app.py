@@ -350,14 +350,14 @@ def eliminar_vehiculo(id):
 @app.route('/buscar', methods=['GET'])
 @login_required
 def buscar_vehiculos():
-    query = request.args.get('query', '').strip()  
+    query = request.args.get('query', '').strip()  # Buscar por marca o modelo
     precio_min = request.args.get('precio_min')
     precio_max = request.args.get('precio_max')
     anio_min = request.args.get('anio_min')
     anio_max = request.args.get('anio_max')
     kilometraje_max = request.args.get('kilometraje_max')
     tipo = request.args.get('tipo')
-    orden = request.args.get('orden', 'precio')  
+    orden = request.args.get('orden', 'precio')  # Ordenar por precio por defecto
 
     conn = conectar()
     if not conn:
@@ -366,13 +366,14 @@ def buscar_vehiculos():
 
     cursor = conn.cursor()
     try:
-       
+        # Construir la consulta con f-strings
         query_base = f"""
-        SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion
+        SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion, imagen
         FROM vehiculos
         WHERE 1=1
         """
 
+        # Filtros opcionales
         if query:
             query_base += f" AND (marca LIKE '%{query}%' OR modelo LIKE '%{query}%')"
         if precio_min:
@@ -388,7 +389,7 @@ def buscar_vehiculos():
         if tipo:
             query_base += f" AND tipo LIKE '%{tipo}%'"
 
-       
+        # Ordenar resultados
         if orden == 'precio':
             query_base += " ORDER BY precio ASC"
         elif orden == 'anio':
@@ -397,7 +398,7 @@ def buscar_vehiculos():
         cursor.execute(query_base)
         vehiculos = cursor.fetchall()
 
-        
+        # Depuración: Verificar consulta y resultados
         print(f"Consulta ejecutada: {query_base}")
         print(f"Resultados obtenidos: {vehiculos}")
     except pyodbc.Error as e:
