@@ -731,6 +731,40 @@ def ver_todas_compras():
 
     return render_template('admin_compras.html', compras=compras)
 
+@app.route('/comparar', methods=['GET'])
+@login_required
+def comparar_vehiculos():
+    ids = request.args.getlist('ids')  # Obtener los IDs de los vehículos seleccionados
+
+    if len(ids) < 2:
+        flash("Selecciona al menos dos vehículos para comparar.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+        # Consulta para obtener los detalles de los vehículos seleccionados
+        query = f"""
+        SELECT id, marca, modelo, anio, precio, color, kilometraje, tipo, transmision, descripcion, imagen
+        FROM vehiculos
+        WHERE id IN ({', '.join(ids)})
+        """
+        cursor.execute(query)
+        vehiculos = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener vehículos para comparar: {e}")
+        flash("Ocurrió un error al cargar los vehículos.")
+        vehiculos = []
+    finally:
+        conn.close()
+
+    return render_template('comparar.html', vehiculos=vehiculos)
+
+
 @app.route('/logout')
 @login_required
 def logout():

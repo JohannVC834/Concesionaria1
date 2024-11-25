@@ -29,4 +29,26 @@ body {
 
 .card-footer button {
     margin: 0 5px;
+
+}
+
+.card {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-img-top {
+    height: 180px;
+    object-fit: cover;
+}
+
+.card-title {
+    font-weight: bold;
+    font-size: 1.25rem;
 }
