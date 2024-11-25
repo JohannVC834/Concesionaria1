@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Todas las Compras{% endblock %}
+
+{% block content %}
+<h2>Compras Realizadas</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID Compra</th>
+            <th>Usuario</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Año</th>
+            <th>Precio</th>
+            <th>Fecha de Compra</th>
+            <th>Factura</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for compra in compras %}
+        <tr>
+            <td>{{ compra[0] }}</td>
+            <td>{{ compra[1] }}</td>
+            <td>{{ compra[2] }}</td>
+            <td>{{ compra[3] }}</td>
+            <td>{{ compra[4] }}</td>
+            <td>${{ compra[5] }}</td>
+            <td>{{ compra[6] }}</td>
+            <td>
+                <a href="{{ url_for('generar_factura', compra_id=compra[0]) }}" class="btn btn-primary">
+                    Descargar Factura
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('inicio') }}" class="btn btn-secondary">Volver al Inicio</a>
+{% endblock %}

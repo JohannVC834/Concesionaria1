@@ -644,14 +644,25 @@ def generar_factura(compra_id):
     cursor = conn.cursor()
 
     try:
-        # Obtener los detalles de la compra
-        query = f"""
-        SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra, u.nombre
-        FROM compras c
-        JOIN vehiculos v ON c.vehiculo_id = v.id
-        JOIN usuarios u ON c.usuario_id = u.id
-        WHERE c.id = {compra_id} AND c.usuario_id = {current_user.id}
-        """
+        # Permitir que el administrador acceda a todas las facturas
+        if current_user.is_admin:
+            query = f"""
+            SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra, u.nombre
+            FROM compras c
+            JOIN vehiculos v ON c.vehiculo_id = v.id
+            JOIN usuarios u ON c.usuario_id = u.id
+            WHERE c.id = {compra_id}
+            """
+        else:
+            # Restringir acceso a las facturas del usuario actual
+            query = f"""
+            SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra, u.nombre
+            FROM compras c
+            JOIN vehiculos v ON c.vehiculo_id = v.id
+            JOIN usuarios u ON c.usuario_id = u.id
+            WHERE c.id = {compra_id} AND c.usuario_id = {current_user.id}
+            """
+
         cursor.execute(query)
         compra = cursor.fetchone()
 
@@ -685,6 +696,40 @@ def generar_factura(compra_id):
         return redirect(url_for('ver_compras'))
     finally:
         conn.close()
+
+
+@app.route('/admin/compras')
+@login_required
+def ver_todas_compras():
+    if not current_user.is_admin:
+        flash("No tienes permiso para acceder a esta página.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener todas las compras
+        query = """
+        SELECT c.id, u.nombre, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra
+        FROM compras c
+        JOIN usuarios u ON c.usuario_id = u.id
+        JOIN vehiculos v ON c.vehiculo_id = v.id
+        """
+        cursor.execute(query)
+        compras = cursor.fetchall()
+    except pyodbc.Error as e:
+        print("Error al obtener compras:", e)
+        flash("Hubo un error al cargar las compras.")
+        compras = []
+    finally:
+        conn.close()
+
+    return render_template('admin_compras.html', compras=compras)
 
 @app.route('/logout')
 @login_required
