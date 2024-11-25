@@ -50,7 +50,7 @@
 
 {% if current_user.is_authenticated %}
 <li class="nav-item">
-    <a class="nav-link btn btn-outline-primary btn-sm text" href="{{ url_for('mis_reservas') }}">
+    <a class="nav-link" href="{{ url_for('mis_reservas') }}">
         Mis Reservas
     </a>
 </li>
@@ -58,7 +58,7 @@
 
 {% if current_user.is_authenticated %}
 <li class="nav-item">
-    <a class="nav-link btn btn-outline-secondary btn-sm text" href="{{ url_for('mis_mensajes_soporte') }}">
+    <a class="nav-link" href="{{ url_for('mis_mensajes_soporte') }}">
         Mis Mensajes
     </a>
 </li>
