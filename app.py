@@ -875,22 +875,22 @@ def admin_resolver_mensaje(id):
 
     cursor = conn.cursor()
     try:
-        # Actualizar el estado del mensaje a "Resuelto"
+        # Eliminar el mensaje de la base de datos
         query = f"""
-            UPDATE mensajes_soporte
-            SET estado = 'Resuelto'
+            DELETE FROM mensajes_soporte
             WHERE id = {id}
         """
         cursor.execute(query)
         conn.commit()
-        flash("El mensaje ha sido marcado como resuelto.")
+        flash("El mensaje ha sido eliminado correctamente.")
     except Exception as e:
-        print(f"Error al actualizar el estado del mensaje: {e}")
-        flash("Hubo un problema al marcar el mensaje como resuelto.")
+        print(f"Error al eliminar el mensaje: {e}")
+        flash("Hubo un problema al eliminar el mensaje.")
     finally:
         conn.close()
 
     return redirect(url_for('admin_mensajes_soporte'))
+
 
 @app.route('/reservar/<int:vehiculo_id>', methods=['POST'])
 @login_required
@@ -987,17 +987,19 @@ def admin_resolver_reserva(id):
     conn = conectar()
     cursor = conn.cursor()
     try:
-        query = f"UPDATE reservas SET estado = 'Resuelto' WHERE id = {id}"
+        # Eliminar la reserva de la base de datos
+        query = f"DELETE FROM reservas WHERE id = {id}"
         cursor.execute(query)
         conn.commit()
-        flash("La reserva ha sido marcada como resuelta.")
+        flash("La reserva ha sido eliminada correctamente.")
     except Exception as e:
-        print(f"Error al resolver la reserva: {e}")
-        flash("Hubo un problema al resolver la reserva.")
+        print(f"Error al eliminar la reserva: {e}")
+        flash("Hubo un problema al eliminar la reserva.")
     finally:
         conn.close()
 
     return redirect(url_for('admin_reservas'))
+
 
 
 
