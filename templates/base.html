@@ -48,6 +48,23 @@
 </li>
 {% endif %}
 
+{% if current_user.is_authenticated %}
+<li class="nav-item">
+    <a class="nav-link btn btn-outline-primary btn-sm text" href="{{ url_for('mis_reservas') }}">
+        Mis Reservas
+    </a>
+</li>
+{% endif %}
+
+{% if current_user.is_authenticated %}
+<li class="nav-item">
+    <a class="nav-link btn btn-outline-secondary btn-sm text" href="{{ url_for('mis_mensajes_soporte') }}">
+        Mis Mensajes
+    </a>
+</li>
+{% endif %}
+
+
 {% if current_user.is_authenticated and current_user.is_admin %}
 <li class="nav-item">
     <a class="nav-link btn btn-outline-warning btn-sm text" href="{{ url_for('admin_mensajes_soporte') }}">
@@ -55,6 +72,15 @@
     </a>
 </li>
 {% endif %}
+
+{% if current_user.is_authenticated and current_user.is_admin %}
+<li class="nav-item">
+    <a class="nav-link btn btn-outline-warning btn-sm text" href="{{ url_for('admin_reservas') }}">
+        Ver Reservas
+    </a>
+</li>
+{% endif %}
+
 
             </ul>
         </div>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Reservas - Administración{% endblock %}
+
+{% block content %}
+<h2>Reservas de Vehículos</h2>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Vehículo</th>
+            <th>Año</th>
+            <th>Fecha de Reserva</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reserva in reservas %}
+        <tr>
+            <td>{{ reserva[0] }}</td>
+            <td>{{ reserva[1] }}</td>
+            <td>{{ reserva[2] }} {{ reserva[3] }}</td>
+            <td>{{ reserva[4] }}</td>
+            <td>{{ reserva[5] }}</td>
+            <td>{{ reserva[6] }}</td>
+            <td>
+                {% if reserva[6] != 'Resuelto' %}
+                <form action="{{ url_for('admin_resolver_reserva', id=reserva[0]) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-success btn-sm">Marcar como Resuelto</button>
+                </form>
+                {% else %}
+                <span class="badge badge-success">Resuelto</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('inicio') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

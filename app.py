@@ -801,6 +801,31 @@ def soporte():
 
     return render_template('soporte.html')
 
+@app.route('/mis_mensajes_soporte')
+@login_required
+def mis_mensajes_soporte():
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        # Consultar mensajes del usuario actual
+        query = f"""
+            SELECT id, asunto, mensaje, fecha, estado
+            FROM mensajes_soporte
+            WHERE usuario_id = {current_user.id}
+            ORDER BY fecha DESC
+        """
+        cursor.execute(query)
+        mensajes = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener los mensajes de soporte: {e}")
+        mensajes = []
+        flash("Hubo un error al cargar tus mensajes de soporte.")
+    finally:
+        conn.close()
+
+    return render_template('mis_mensajes_soporte.html', mensajes=mensajes)
+
+
 @app.route('/admin/mensajes_soporte')
 @login_required
 def admin_mensajes_soporte():
@@ -866,6 +891,114 @@ def admin_resolver_mensaje(id):
         conn.close()
 
     return redirect(url_for('admin_mensajes_soporte'))
+
+@app.route('/reservar/<int:vehiculo_id>', methods=['POST'])
+@login_required
+def reservar(vehiculo_id):
+    # Obtener la fecha ingresada en el formulario
+    fecha = request.form.get('fecha')
+    if not fecha:
+        flash("Por favor, selecciona una fecha válida para la reserva.")
+        return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        # Insertar la reserva en la base de datos
+        query = f"""
+            INSERT INTO reservas (usuario_id, vehiculo_id, fecha)
+            VALUES ({current_user.id}, {vehiculo_id}, '{fecha}')
+        """
+        cursor.execute(query)
+        conn.commit()
+        flash("Reserva realizada con éxito. Nos pondremos en contacto contigo para confirmar.")
+    except Exception as e:
+        print(f"Error al realizar la reserva: {e}")
+        flash("Hubo un error al realizar la reserva. Inténtalo de nuevo.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+@app.route('/mis_reservas')
+@login_required
+def mis_reservas():
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        # Consultar las reservas del usuario actual
+        query = f"""
+            SELECT r.id, v.marca, v.modelo, v.anio, r.fecha, r.estado
+            FROM reservas r
+            JOIN vehiculos v ON r.vehiculo_id = v.id
+            WHERE r.usuario_id = {current_user.id}
+            ORDER BY r.fecha DESC
+        """
+        cursor.execute(query)
+        reservas = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener las reservas: {e}")
+        reservas = []
+        flash("Hubo un error al cargar tus reservas.")
+    finally:
+        conn.close()
+
+    return render_template('mis_reservas.html', reservas=reservas)
+
+
+@app.route('/admin/reservas')
+@login_required
+def admin_reservas():
+    if not current_user.is_admin:
+        flash("No tienes permiso para acceder a esta página.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        # Consultar todas las reservas
+        query = """
+            SELECT r.id, u.nombre, v.marca, v.modelo, v.anio, r.fecha, r.estado
+            FROM reservas r
+            JOIN usuarios u ON r.usuario_id = u.id
+            JOIN vehiculos v ON r.vehiculo_id = v.id
+            ORDER BY r.fecha DESC
+        """
+        cursor.execute(query)
+        reservas = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener las reservas: {e}")
+        reservas = []
+        flash("Hubo un error al cargar las reservas.")
+    finally:
+        conn.close()
+
+    return render_template('admin_reservas.html', reservas=reservas)
+
+
+
+@app.route('/admin/reservas/resolver/<int:id>', methods=['POST'])
+@login_required
+def admin_resolver_reserva(id):
+    if not current_user.is_admin:
+        flash("No tienes permiso para realizar esta acción.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        query = f"UPDATE reservas SET estado = 'Resuelto' WHERE id = {id}"
+        cursor.execute(query)
+        conn.commit()
+        flash("La reserva ha sido marcada como resuelta.")
+    except Exception as e:
+        print(f"Error al resolver la reserva: {e}")
+        flash("Hubo un problema al resolver la reserva.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin_reservas'))
+
 
 
 

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Mensajes de Soporte{% endblock %}
+
+{% block content %}
+<h2>Mis Mensajes de Soporte</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Asunto</th>
+            <th>Mensaje</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mensaje in mensajes %}
+        <tr>
+            <td>{{ mensaje[0] }}</td>
+            <td>{{ mensaje[1] }}</td>
+            <td>{{ mensaje[2] }}</td>
+            <td>{{ mensaje[3] }}</td>
+            <td>
+                {% if mensaje[4] == 'Pendiente' %}
+                <span class="badge badge-warning">{{ mensaje[4] }}</span>
+                {% elif mensaje[4] == 'Respondido' %}
+                <span class="badge badge-success">{{ mensaje[4] }}</span>
+                {% elif mensaje[4] == 'Resuelto' %}
+                <span class="badge badge-dark">{{ mensaje[4] }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('inicio') }}" class="btn btn-secondary">Volver al Inicio</a>
+{% endblock %}
