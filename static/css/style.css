@@ -52,3 +52,21 @@ body {
     font-weight: bold;
     font-size: 1.25rem;
 }
+.soporte-cliente {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 20px;
+    border-radius: 50px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+}
+
+.soporte-cliente:hover {
+    background-color: #0056b3;
+    text-decoration: none;
+}

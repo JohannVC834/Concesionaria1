@@ -764,6 +764,110 @@ def comparar_vehiculos():
 
     return render_template('comparar.html', vehiculos=vehiculos)
 
+@app.route('/soporte', methods=['GET', 'POST'])
+@login_required
+def soporte():
+    if request.method == 'POST':
+        asunto = request.form.get('asunto')
+        mensaje = request.form.get('mensaje')
+
+        # Validar que los campos no estén vacíos
+        if not asunto or not mensaje:
+            flash("Por favor, completa todos los campos antes de enviar tu mensaje.")
+            return render_template('soporte.html')
+
+        conn = conectar()
+        if not conn:
+            flash("No se pudo conectar a la base de datos.")
+            return redirect(url_for('inicio'))
+
+        cursor = conn.cursor()
+        try:
+            # Insertar mensaje en la tabla
+            query = f"""
+                INSERT INTO mensajes_soporte (usuario_id, asunto, mensaje)
+                VALUES ({current_user.id}, '{asunto.replace("'", "''")}', '{mensaje.replace("'", "''")}')
+            """
+            cursor.execute(query)
+            conn.commit()
+            flash("Tu solicitud de soporte ha sido enviada. Nos pondremos en contacto contigo pronto.")
+        except Exception as e:
+            print(f"Error al guardar el mensaje de soporte: {e}")
+            flash("Hubo un problema al enviar tu solicitud de soporte. Inténtalo de nuevo.")
+        finally:
+            conn.close()
+
+        return redirect(url_for('inicio'))
+
+    return render_template('soporte.html')
+
+@app.route('/admin/mensajes_soporte')
+@login_required
+def admin_mensajes_soporte():
+    if not current_user.is_admin:
+        flash("No tienes permiso para acceder a esta página.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+        # Consultar todos los mensajes de soporte
+        query = """
+            SELECT m.id, u.nombre, m.asunto, m.mensaje, m.fecha, m.estado
+            FROM mensajes_soporte m
+            JOIN usuarios u ON m.usuario_id = u.id
+            ORDER BY m.fecha DESC
+        """
+        cursor.execute(query)
+        mensajes = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener los mensajes de soporte: {e}")
+        flash("Hubo un error al cargar los mensajes.")
+        mensajes = []
+    finally:
+        conn.close()
+
+    return render_template('admin_mensajes_soporte.html', mensajes=mensajes)
+
+
+
+
+@app.route('/admin/mensajes_soporte/resolver/<int:id>', methods=['POST'])
+@login_required
+def admin_resolver_mensaje(id):
+    if not current_user.is_admin:
+        flash("No tienes permiso para realizar esta acción.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('admin_mensajes_soporte'))
+
+    cursor = conn.cursor()
+    try:
+        # Actualizar el estado del mensaje a "Resuelto"
+        query = f"""
+            UPDATE mensajes_soporte
+            SET estado = 'Resuelto'
+            WHERE id = {id}
+        """
+        cursor.execute(query)
+        conn.commit()
+        flash("El mensaje ha sido marcado como resuelto.")
+    except Exception as e:
+        print(f"Error al actualizar el estado del mensaje: {e}")
+        flash("Hubo un problema al marcar el mensaje como resuelto.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin_mensajes_soporte'))
+
+
 
 @app.route('/logout')
 @login_required

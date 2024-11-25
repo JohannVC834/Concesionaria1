@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Mensajes de Soporte{% endblock %}
+
+{% block content %}
+<h2>Mensajes de Soporte</h2>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Asunto</th>
+            <th>Mensaje</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mensaje in mensajes %}
+        <tr>
+            <td>{{ mensaje[0] }}</td>
+            <td>{{ mensaje[1] }}</td>
+            <td>{{ mensaje[2] }}</td>
+            <td>{{ mensaje[3] }}</td>
+            <td>{{ mensaje[4] }}</td>
+            <td>{{ mensaje[5] }}</td>
+            <td>
+                <form action="{{ url_for('admin_resolver_mensaje', id=mensaje[0]) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-success btn-sm">Marcar como Resuelto</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('inicio') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}

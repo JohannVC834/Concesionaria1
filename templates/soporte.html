@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Soporte al Cliente{% endblock %}
+
+{% block content %}
+<h2>Soporte al Cliente</h2>
+<p>Si tienes problemas o preguntas, por favor completa el formulario a continuación. Nuestro equipo te ayudará lo antes posible.</p>
+
+<form action="{{ url_for('soporte') }}" method="POST">
+    <div class="mb-3">
+        <label for="asunto" class="form-label">Asunto</label>
+        <input type="text" class="form-control" id="asunto" name="asunto" required>
+    </div>
+    <div class="mb-3">
+        <label for="mensaje" class="form-label">Mensaje</label>
+        <textarea class="form-control" id="mensaje" name="mensaje" rows="5" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Enviar</button>
+    <a href="{{ url_for('inicio') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
