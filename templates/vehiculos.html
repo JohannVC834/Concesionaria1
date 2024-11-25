@@ -51,52 +51,51 @@
 <a href="{{ url_for('agregar_vehiculo') }}" class="btn btn-success mb-3">Agregar Vehículo</a>
 {% endif %}
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Imagen</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Año</th>
-            <th>Precio</th>
-            <th>Detalles</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for vehiculo in vehiculos %}
-        <tr>
-            <td>
-                {% if vehiculo.imagen %}
-                <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
-                     alt="Imagen de {{ vehiculo.marca }}" 
-                     style="width: 100px; height: auto;">
-                {% else %}
-                <span>Sin Imagen</span>
-                {% endif %}
-            </td>
-            <td>{{ vehiculo.marca }}</td>
-            <td>{{ vehiculo.modelo }}</td>
-            <td>{{ vehiculo.anio }}</td>
-            <td>${{ vehiculo.precio }}</td>
-            <td><a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="btn btn-info">Ver Detalles</a></td>
-            <td>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for vehiculo in vehiculos %}
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <!-- Imagen del vehículo -->
+            {% if vehiculo.imagen %}
+            <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
+                 class="card-img-top" 
+                 alt="Imagen de {{ vehiculo.marca }}">
+            {% else %}
+            <img src="https://via.placeholder.com/150" 
+                 class="card-img-top" 
+                 alt="Sin imagen disponible">
+            {% endif %}
+            
+            <!-- Información del vehículo -->
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h5>
+                <p class="card-text"><strong>Año:</strong> {{ vehiculo.anio }}</p>
+                <p class="card-text text-success"><strong>Precio:</strong> ${{ vehiculo.precio }}</p>
+                <p class="card-text"><strong>Detalles:</strong> <a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="text-decoration-underline">Ver más</a></p>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="card-footer bg-white text-center">
                 <form action="{{ url_for('datos_pago', vehiculo_id=vehiculo.id) }}" method="get" style="display:inline;">
-                    <button type="submit" class="btn btn-success">Comprar</button>
+                    <button type="submit" class="btn btn-outline-success btn-sm">Comprar</button>
                 </form>
-                
                 <form action="{{ url_for('agregar_favorito', vehiculo_id=vehiculo.id) }}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-warning">Favorito</button>
+                    <button type="submit" class="btn btn-outline-warning btn-sm">Favorito</button>
                 </form>
                 {% if is_admin %}
-                <a href="{{ url_for('editar_vehiculo', id=vehiculo.id) }}" class="btn btn-warning">Editar</a>
+                <a href="{{ url_for('editar_vehiculo', id=vehiculo.id) }}" class="btn btn-outline-primary btn-sm">Editar</a>
                 <form action="{{ url_for('eliminar_vehiculo', id=vehiculo.id) }}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este vehículo?');">Eliminar</button>
+                    <button type="submit" class="btn btn-outline-danger btn-sm" 
+                            onclick="return confirm('¿Estás seguro de que deseas eliminar este vehículo?');">
+                        Eliminar
+                    </button>
                 </form>
                 {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
 {% endblock %}
