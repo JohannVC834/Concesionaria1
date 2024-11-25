@@ -5,6 +5,7 @@
 {% block content %}
 <h2>Vehículos Disponibles</h2>
 
+<!-- Formulario de búsqueda -->
 <form action="{{ url_for('buscar_vehiculos') }}" method="GET" class="mb-3">
     <div class="row">
         <div class="col-md-3">
@@ -56,46 +57,59 @@
     <div class="mb-3">
         <button type="submit" class="btn btn-primary">Comparar Seleccionados</button>
     </div>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {% for vehiculo in vehiculos %}
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <!-- Imagen del vehículo -->
-                {% if vehiculo.imagen %}
-                <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
-                     class="card-img-top" 
-                     alt="Imagen de {{ vehiculo.marca }}">
-                {% else %}
-                <img src="https://via.placeholder.com/150" 
-                     class="card-img-top" 
-                     alt="Sin imagen disponible">
-                {% endif %}
-                
-                <!-- Información del vehículo -->
-                <div class="card-body">
-                    <h5 class="card-title text-primary">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h5>
-                    <p class="card-text"><strong>Año:</strong> {{ vehiculo.anio }}</p>
-                    <p class="card-text text-success"><strong>Precio:</strong> ${{ vehiculo.precio }}</p>
-                    <p class="card-text"><strong>Detalles:</strong> <a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="text-decoration-underline">Ver más</a></p>
-                </div>
+</form>
 
-                <!-- Casilla de selección y botones -->
-                <div class="card-footer bg-white text-center">
-                    <!-- Mantener botones "Comprar" y "Favorito" -->
-                    <form action="{{ url_for('datos_pago', vehiculo_id=vehiculo.id) }}" method="get" style="display:inline;">
-                        <button type="submit" class="btn btn-outline-success btn-sm">Comprar</button>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for vehiculo in vehiculos %}
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <!-- Imagen del vehículo -->
+            {% if vehiculo.imagen %}
+            <img src="{{ url_for('static', filename=vehiculo.imagen) }}" 
+                 class="card-img-top" 
+                 alt="Imagen de {{ vehiculo.marca }}">
+            {% else %}
+            <img src="https://via.placeholder.com/150" 
+                 class="card-img-top" 
+                 alt="Sin imagen disponible">
+            {% endif %}
+            
+            <!-- Información del vehículo -->
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h5>
+                <p class="card-text"><strong>Año:</strong> {{ vehiculo.anio }}</p>
+                <p class="card-text text-success"><strong>Precio:</strong> ${{ vehiculo.precio }}</p>
+                <p class="card-text"><strong>Detalles:</strong> <a href="{{ url_for('detalle_vehiculo', id=vehiculo.id) }}" class="text-decoration-underline">Ver más</a></p>
+            </div>
+
+            <!-- Casilla de selección y botones -->
+            <div class="card-footer bg-white text-center">
+                <!-- Botón "Comprar" -->
+                <form action="{{ url_for('datos_pago', vehiculo_id=vehiculo.id) }}" method="get" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-success btn-sm">Comprar</button>
+                </form>
+
+                <!-- Botón "Favorito" -->
+                <form action="{{ url_for('agregar_favorito', vehiculo_id=vehiculo.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-warning btn-sm">Favorito</button>
+                </form>
+
+                <!-- Casilla de selección -->
+                <input type="checkbox" name="ids" value="{{ vehiculo.id }}" form="comparar-form" class="mt-2">
+
+                <!-- Botones "Editar" y "Eliminar" (solo para administradores) -->
+                {% if is_admin %}
+                <div class="mt-2">
+                    <a href="{{ url_for('editar_vehiculo', id=vehiculo.id) }}" class="btn btn-warning btn-sm">Editar</a>
+                    <form action="{{ url_for('eliminar_vehiculo', id=vehiculo.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este vehículo?');">Eliminar</button>
                     </form>
-                    <form action="{{ url_for('agregar_favorito', vehiculo_id=vehiculo.id) }}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-outline-warning btn-sm">Favorito</button>
-                    </form>
-                    
-                    <!-- Casilla de selección -->
-                    <input type="checkbox" name="ids" value="{{ vehiculo.id }}" class="mt-2">
                 </div>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
     </div>
-</form>
+    {% endfor %}
+</div>
 
 {% endblock %}
