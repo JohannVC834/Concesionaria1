@@ -173,9 +173,11 @@ def detalle_vehiculo(id):
 
     cursor = conn.cursor()
     try:
+        # Obtener detalles del vehículo
         cursor.execute(f"SELECT * FROM vehiculos WHERE id = {id}")
         vehiculo = cursor.fetchone()
 
+        # Obtener comentarios
         cursor.execute(f"""
             SELECT c.contenido, c.fecha, u.nombre
             FROM comentarios c
@@ -184,6 +186,16 @@ def detalle_vehiculo(id):
             ORDER BY c.fecha DESC
         """)
         comentarios = cursor.fetchall()
+
+        # Obtener calificación promedio y total de calificaciones
+        cursor.execute(f"""
+            SELECT AVG(calificacion) AS promedio, COUNT(calificacion) AS total
+            FROM calificaciones WHERE vehiculo_id = {id}
+        """)
+        calificaciones = cursor.fetchone()
+
+        promedio_calificacion = round(calificaciones[0], 1) if calificaciones[0] else "Sin calificaciones"
+        total_calificaciones = calificaciones[1]
 
     except pyodbc.Error as e:
         print("Error al obtener los detalles:", e)
@@ -196,7 +208,14 @@ def detalle_vehiculo(id):
         flash("El vehículo no existe.")
         return redirect(url_for('inicio'))
 
-    return render_template('detalle_vehiculo.html', vehiculo=vehiculo, comentarios=comentarios)
+    return render_template(
+        'detalle_vehiculo.html',
+        vehiculo=vehiculo,
+        comentarios=comentarios,
+        promedio_calificacion=promedio_calificacion,
+        total_calificaciones=total_calificaciones
+    )
+
 
 
 @app.route('/vehiculos/agregar', methods=['GET', 'POST'])
@@ -510,6 +529,57 @@ def agregar_comentario(vehiculo_id):
         conn.close()
 
     return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+@app.route('/vehiculos/<int:vehiculo_id>/calificar', methods=['POST'])
+@login_required
+def calificar_vehiculo(vehiculo_id):
+    calificacion = request.form.get('calificacion')
+
+    if not calificacion or not calificacion.isdigit() or int(calificacion) not in range(1, 6):
+        flash("Por favor, selecciona una calificación válida entre 1 y 5.")
+        return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
+    cursor = conn.cursor()
+    try:
+        # Verificar si el usuario ya calificó este vehículo
+        query_check = f"""
+        SELECT id FROM calificaciones WHERE usuario_id = {current_user.id} AND vehiculo_id = {vehiculo_id}
+        """
+        cursor.execute(query_check)
+        calificacion_existente = cursor.fetchone()
+
+        if calificacion_existente:
+            # Actualizar la calificación existente
+            query_update = f"""
+            UPDATE calificaciones
+            SET calificacion = {calificacion}
+            WHERE id = {calificacion_existente[0]}
+            """
+            cursor.execute(query_update)
+            flash("Tu calificación ha sido actualizada.")
+        else:
+            # Insertar una nueva calificación
+            query_insert = f"""
+            INSERT INTO calificaciones (usuario_id, vehiculo_id, calificacion)
+            VALUES ({current_user.id}, {vehiculo_id}, {calificacion})
+            """
+            cursor.execute(query_insert)
+            flash("Gracias por calificar este vehículo.")
+
+        conn.commit()
+    except pyodbc.Error as e:
+        print("Error al guardar la calificación:", e)
+        flash("Hubo un error al calificar el vehículo. Inténtalo nuevamente.")
+    finally:
+        conn.close()
+
+    return redirect(url_for('detalle_vehiculo', id=vehiculo_id))
+
 
 @app.route('/comprar/<int:vehiculo_id>', methods=['POST'])
 @login_required

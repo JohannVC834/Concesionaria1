@@ -21,7 +21,33 @@
         <p class="card-text"><strong>Tipo:</strong> {{ vehiculo.tipo }}</p>
         <p class="card-text"><strong>Transmisión:</strong> {{ vehiculo.transmision }}</p>
         <p class="card-text"><strong>Descripción:</strong> {{ vehiculo.descripcion }}</p>
-        <a href="{{ url_for('inicio') }}" class="btn btn-primary">Volver a la Lista</a>
+        
+        <!-- Calificaciones -->
+        <h4>Calificación Promedio:</h4>
+        <p>
+            {% if promedio_calificacion != "Sin calificaciones" %}
+            ⭐ {{ promedio_calificacion }} / 5 ({{ total_calificaciones }} calificaciones)
+            {% else %}
+            Sin calificaciones
+            {% endif %}
+        </p>
+        
+        <!-- Formulario para calificar -->
+        <form action="{{ url_for('calificar_vehiculo', vehiculo_id=vehiculo.id) }}" method="POST">
+            <div class="form-group">
+                <label for="calificacion">Tu calificación:</label>
+                <select name="calificacion" id="calificacion" class="form-control">
+                    <option value="1">1 estrella</option>
+                    <option value="2">2 estrellas</option>
+                    <option value="3">3 estrellas</option>
+                    <option value="4">4 estrellas</option>
+                    <option value="5">5 estrellas</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success mt-2">Enviar Calificación</button>
+        </form>
+        
+        <a href="{{ url_for('inicio') }}" class="btn btn-primary mt-3">Volver a la Lista</a>
     </div>
 </div>
 
@@ -45,7 +71,7 @@
     <button type="submit" class="btn btn-success">Agregar Comentario</button>
 </form>
 
-<h5>Reserva este vehículo</h4>
+<h5>Reserva este vehículo</h5>
 <form action="{{ url_for('reservar', vehiculo_id=vehiculo.id) }}" method="POST" class="mt-3">
     <div class="form-group">
         <label for="fecha">Selecciona una fecha:</label>
@@ -55,4 +81,3 @@
 </form>
 
 {% endblock %}
-
