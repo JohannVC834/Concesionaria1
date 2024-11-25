@@ -564,15 +564,16 @@ def ver_compras():
     cursor = conn.cursor()
 
     try:
-        # Obtener las compras del usuario
+        # Obtener las compras del usuario desde la tabla `historial_compras`
         query = f"""
-        SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra
-        FROM compras c
-        JOIN vehiculos v ON c.vehiculo_id = v.id
-        WHERE c.usuario_id = {current_user.id}
+        SELECT id, marca, modelo, anio, precio, fecha_compra
+        FROM historial_compras
+        WHERE usuario_id = {current_user.id}
+        ORDER BY fecha_compra DESC
         """
         cursor.execute(query)
         compras = cursor.fetchall()
+        print("Compras obtenidas para el usuario:", compras)  # Depuración
     except pyodbc.Error as e:
         print("Error al obtener compras:", e)
         compras = []
@@ -581,6 +582,9 @@ def ver_compras():
         conn.close()
 
     return render_template('mis_compras.html', compras=compras)
+
+
+
 
 
 @app.route('/pago/<int:vehiculo_id>', methods=['GET', 'POST'])
@@ -595,7 +599,7 @@ def datos_pago(vehiculo_id):
 
     try:
         # Obtener detalles del vehículo
-        cursor.execute(f"SELECT id, marca, modelo, precio FROM vehiculos WHERE id = {vehiculo_id}")
+        cursor.execute(f"SELECT id, marca, modelo, anio, precio FROM vehiculos WHERE id = {vehiculo_id}")
         vehiculo = cursor.fetchone()
 
         if not vehiculo:
@@ -603,7 +607,7 @@ def datos_pago(vehiculo_id):
             return redirect(url_for('inicio'))
 
         if request.method == 'POST':
-            # Simular la validación de datos de pago
+            # Validar datos de pago
             nombre_tarjeta = request.form.get('nombre_tarjeta')
             numero_tarjeta = request.form.get('numero_tarjeta')
             fecha_expiracion = request.form.get('fecha_expiracion')
@@ -613,16 +617,27 @@ def datos_pago(vehiculo_id):
                 flash("Por favor, completa todos los datos de pago.")
                 return render_template('pago.html', vehiculo=vehiculo)
 
-            # Registrar la compra
-            query = f"""
-            INSERT INTO compras (usuario_id, vehiculo_id, precio)
-            VALUES ({current_user.id}, {vehiculo_id}, {vehiculo[3]})
-            """
-            cursor.execute(query)
-            conn.commit()
+            try:
+                # Insertar datos en la tabla `historial_compras`
+                query_compra = f"""
+                INSERT INTO historial_compras (usuario_id, vehiculo_id, marca, modelo, anio, precio)
+                VALUES ({current_user.id}, {vehiculo[0]}, '{vehiculo[1]}', '{vehiculo[2]}', {vehiculo[3]}, {vehiculo[4]})
+                """
+                cursor.execute(query_compra)
 
-            flash("¡Compra realizada con éxito! Este vehículo ahora es tuyo.")
-            return redirect(url_for('ver_compras'))
+                # Eliminar el vehículo de la tabla `vehiculos`
+                query_eliminar = f"DELETE FROM vehiculos WHERE id = {vehiculo_id}"
+                cursor.execute(query_eliminar)
+
+                # Confirmar transacción
+                conn.commit()
+
+                flash("¡Pago realizado con éxito! El vehículo ahora es tuyo y ha sido eliminado del inventario.")
+                return redirect(url_for('ver_compras'))
+            except pyodbc.Error as e:
+                print("Error al registrar la compra o eliminar el vehículo:", e)
+                conn.rollback()
+                flash("Hubo un problema al procesar el pago. Inténtalo nuevamente.")
 
         return render_template('pago.html', vehiculo=vehiculo)
 
@@ -632,6 +647,8 @@ def datos_pago(vehiculo_id):
         return redirect(url_for('inicio'))
     finally:
         conn.close()
+
+
 
 @app.route('/factura/<int:compra_id>', methods=['GET'])
 @login_required
@@ -644,23 +661,18 @@ def generar_factura(compra_id):
     cursor = conn.cursor()
 
     try:
-        # Permitir que el administrador acceda a todas las facturas
+        # Obtener detalles de la compra según el rol del usuario
         if current_user.is_admin:
             query = f"""
-            SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra, u.nombre
-            FROM compras c
-            JOIN vehiculos v ON c.vehiculo_id = v.id
-            JOIN usuarios u ON c.usuario_id = u.id
-            WHERE c.id = {compra_id}
+            SELECT id, marca, modelo, anio, precio, fecha_compra
+            FROM historial_compras
+            WHERE id = {compra_id}
             """
         else:
-            # Restringir acceso a las facturas del usuario actual
             query = f"""
-            SELECT c.id, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra, u.nombre
-            FROM compras c
-            JOIN vehiculos v ON c.vehiculo_id = v.id
-            JOIN usuarios u ON c.usuario_id = u.id
-            WHERE c.id = {compra_id} AND c.usuario_id = {current_user.id}
+            SELECT id, marca, modelo, anio, precio, fecha_compra
+            FROM historial_compras
+            WHERE id = {compra_id} AND usuario_id = {current_user.id}
             """
 
         cursor.execute(query)
@@ -668,9 +680,9 @@ def generar_factura(compra_id):
 
         if not compra:
             flash("Compra no encontrada o no tienes permiso para verla.")
-            return redirect(url_for('ver_compras'))
+            return redirect(url_for('ver_compras' if not current_user.is_admin else 'ver_todas_compras'))
 
-        # Crear el PDF
+        # Crear el PDF de la factura
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font('Arial', 'B', 16)
@@ -680,7 +692,6 @@ def generar_factura(compra_id):
         # Información de la compra
         pdf.set_font('Arial', '', 12)
         pdf.cell(0, 10, f"ID Compra: {compra[0]}", 0, 1)
-        pdf.cell(0, 10, f"Usuario: {compra[6]}", 0, 1)
         pdf.cell(0, 10, f"Vehículo: {compra[1]} {compra[2]} ({compra[3]})", 0, 1)
         pdf.cell(0, 10, f"Precio: ${compra[4]:,.2f}", 0, 1)
         pdf.cell(0, 10, f"Fecha de Compra: {compra[5]}", 0, 1)
@@ -693,7 +704,7 @@ def generar_factura(compra_id):
     except pyodbc.Error as e:
         print("Error al generar la factura:", e)
         flash("Hubo un error al generar la factura.")
-        return redirect(url_for('ver_compras'))
+        return redirect(url_for('ver_compras' if not current_user.is_admin else 'ver_todas_compras'))
     finally:
         conn.close()
 
@@ -701,6 +712,7 @@ def generar_factura(compra_id):
 @app.route('/admin/compras')
 @login_required
 def ver_todas_compras():
+    # Verificar que el usuario tiene permisos de administrador
     if not current_user.is_admin:
         flash("No tienes permiso para acceder a esta página.")
         return redirect(url_for('inicio'))
@@ -713,12 +725,12 @@ def ver_todas_compras():
     cursor = conn.cursor()
 
     try:
-        # Obtener todas las compras
+        # Obtener todas las compras desde la tabla `historial_compras`
         query = """
-        SELECT c.id, u.nombre, v.marca, v.modelo, v.anio, c.precio, c.fecha_compra
-        FROM compras c
-        JOIN usuarios u ON c.usuario_id = u.id
-        JOIN vehiculos v ON c.vehiculo_id = v.id
+        SELECT hc.id, u.nombre, hc.marca, hc.modelo, hc.anio, hc.precio, hc.fecha_compra
+        FROM historial_compras hc
+        JOIN usuarios u ON hc.usuario_id = u.id
+        ORDER BY hc.fecha_compra DESC
         """
         cursor.execute(query)
         compras = cursor.fetchall()
@@ -730,6 +742,7 @@ def ver_todas_compras():
         conn.close()
 
     return render_template('admin_compras.html', compras=compras)
+
 
 @app.route('/comparar', methods=['GET'])
 @login_required
@@ -999,10 +1012,6 @@ def admin_resolver_reserva(id):
         conn.close()
 
     return redirect(url_for('admin_reservas'))
-
-
-
-
 
 @app.route('/logout')
 @login_required
