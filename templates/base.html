@@ -49,22 +49,22 @@
 
                 {% if current_user.is_authenticated and current_user.is_admin %}
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-warning btn-sm" href="{{ url_for('admin_mensajes_soporte') }}">Mensajes de Soporte</a>
+                        <a class="nav-link" href="{{ url_for('admin_mensajes_soporte') }}">Mensajes de Soporte</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-warning btn-sm" href="{{ url_for('admin_reservas') }}">Ver Reservas</a>
+                        <a class="nav-link " href="{{ url_for('admin_reservas') }}">Ver Reservas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-warning btn-sm" href="{{ url_for('gestionar_destacados') }}">Gestionar Destacados</a>
+                        <a class="nav-link" href="{{ url_for('gestionar_destacados') }}">Gestionar Destacados</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-warning btn-sm" href="{{ url_for('ver_todas_compras') }}">Ver Compras</a>
+                        <a class="nav-link" href="{{ url_for('ver_todas_compras') }}">Ver Compras</a>
                     </li>
                 {% endif %}
 
                 {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link btn btn-primary btn-sm" href="{{ url_for('mostrar_destacados') }}">Ver Destacados</a>
+                        <a class="nav-link" href="{{ url_for('mostrar_destacados') }}">Ver Destacados</a>
                     </li>
                 {% endif %}
             </ul>
