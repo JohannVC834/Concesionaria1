@@ -1083,6 +1083,90 @@ def admin_resolver_reserva(id):
 
     return redirect(url_for('admin_reservas'))
 
+@app.route('/admin/destacados', methods=['GET', 'POST'])
+@login_required
+def gestionar_destacados():
+    if not current_user.is_admin:
+        flash("No tienes permiso para acceder a esta página.")
+        return redirect(url_for('inicio'))
+
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        destacados = request.form.getlist('destacados')
+        try:
+            # Reiniciar todos los destacados a 0
+            cursor.execute("UPDATE vehiculos SET destacado = 0")
+            # Establecer los vehículos seleccionados como destacados
+            for vehiculo_id in destacados:
+                cursor.execute(f"UPDATE vehiculos SET destacado = 1 WHERE id = {vehiculo_id}")
+            conn.commit()
+            flash("Los vehículos destacados han sido actualizados.")
+        except Exception as e:
+            print(f"Error al actualizar los destacados: {e}")
+            flash("Hubo un problema al actualizar los vehículos destacados.")
+            conn.rollback()
+        finally:
+            conn.close()
+        return redirect(url_for('gestionar_destacados'))
+
+    # Obtener todos los vehículos para mostrarlos en la página de administración
+    try:
+        cursor.execute("SELECT id, marca, modelo, anio, destacado FROM vehiculos")
+        vehiculos = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener vehículos: {e}")
+        vehiculos = []
+    finally:
+        conn.close()
+
+    return render_template('admin_destacados.html', vehiculos=vehiculos)
+
+
+@app.route('/destacados')
+@login_required
+def mostrar_destacados():
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+    try:
+        # Obtener vehículos destacados
+        query = "SELECT id, marca, modelo, anio, precio, imagen FROM vehiculos WHERE destacado = 1"
+        cursor.execute(query)
+        resultados = cursor.fetchall()
+
+        # Convertir resultados en una lista de diccionarios
+        vehiculos = [
+            {
+                "id": fila[0],
+                "marca": fila[1],
+                "modelo": fila[2],
+                "anio": fila[3],
+                "precio": float(fila[4]),
+                "imagen": fila[5]
+            }
+            for fila in resultados
+        ]
+        print(f"Vehículos destacados obtenidos: {vehiculos}")
+    except Exception as e:
+        print(f"Error al obtener vehículos destacados: {e}")
+        flash("Hubo un error al cargar los vehículos destacados.")
+        vehiculos = []
+    finally:
+        conn.close()
+
+    return render_template('destacados.html', vehiculos=vehiculos)
+
+
+
 @app.route('/logout')
 @login_required
 def logout():

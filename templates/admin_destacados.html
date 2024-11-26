@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Vehículos Destacados{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Gestionar Vehículos Destacados</h2>
+
+<form method="POST">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Seleccionar</th>
+                <th>ID</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Año</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehiculo in vehiculos %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="destacados" value="{{ vehiculo[0] }}" {% if vehiculo[4] %}checked{% endif %}>
+                </td>
+                <td>{{ vehiculo[0] }}</td>
+                <td>{{ vehiculo[1] }}</td>
+                <td>{{ vehiculo[2] }}</td>
+                <td>{{ vehiculo[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Actualizar Destacados</button>
+</form>
+<a href="{{ url_for('inicio') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
+{% endblock %}

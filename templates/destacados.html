@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Vehículos Destacados{% endblock %}
+
+{% block content %}
+<h2>Vehículos Destacados</h2>
+
+<div id="destacadosCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        {% for vehiculo in vehiculos %}
+        <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+            <img src="{{ url_for('static', filename=vehiculo['imagen']) }}" class="d-block w-100" alt="{{ vehiculo['marca'] }} {{ vehiculo['modelo'] }}">
+            <div class="carousel-caption d-none d-md-block">
+                <h5>{{ vehiculo['marca'] }} {{ vehiculo['modelo'] }} ({{ vehiculo['anio'] }})</h5>
+                <p>Precio: ${{ vehiculo['precio'] }}</p>
+                <a href="{{ url_for('detalle_vehiculo', id=vehiculo['id']) }}" class="btn btn-success">Ver Detalles</a>
+                <a href="{{ url_for('reservar', vehiculo_id=vehiculo['id']) }}" class="btn btn-primary">Reservar</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#destacadosCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#destacadosCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+    </button>
+</div>
+
+{% endblock %}
+
