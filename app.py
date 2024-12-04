@@ -6,6 +6,8 @@ import os
 from werkzeug.utils import secure_filename
 from flask import send_file
 from fpdf import FPDF
+from math import pow
+
 UPLOAD_FOLDER = 'static/images'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -1164,6 +1166,280 @@ def mostrar_destacados():
         conn.close()
 
     return render_template('destacados.html', vehiculos=vehiculos)
+
+@app.route('/vehiculos/financiamiento/<int:vehiculo_id>', methods=['GET', 'POST'])
+@login_required
+def financiamiento(vehiculo_id):
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener detalles del vehículo
+        cursor.execute(f"SELECT id, marca, modelo, precio FROM vehiculos WHERE id = {vehiculo_id}")
+        vehiculo = cursor.fetchone()
+
+        if not vehiculo:
+            flash("El vehículo no existe.")
+            return redirect(url_for('inicio'))
+
+        # Valores predeterminados
+        tasa_interes_anual = 12.5  # Tasa de interés fija
+        plazo_meses = 12  # Plazo fijo
+        monto_entrada = 0
+        monto_financiado = 0
+        cuota_mensual = 0
+
+        if request.method == 'POST':
+            # Leer datos del formulario
+            monto_entrada = float(request.form.get('monto_entrada', 0))
+
+            # Validar datos
+            if monto_entrada < 0:
+                flash("Por favor, introduce valores válidos.")
+                return render_template('financiamiento.html', vehiculo=vehiculo, tasa_interes_anual=tasa_interes_anual, plazo_meses=plazo_meses)
+
+            # Cálculo del monto financiado
+            precio = float(vehiculo[3])
+            monto_financiado = precio - monto_entrada
+            if monto_financiado < 0:
+                flash("El monto de entrada no puede exceder el precio del vehículo.")
+                return render_template('financiamiento.html', vehiculo=vehiculo, tasa_interes_anual=tasa_interes_anual, plazo_meses=plazo_meses)
+
+            # Cálculo de la cuota mensual usando la fórmula del interés compuesto
+            tasa_mensual = tasa_interes_anual / 100 / 12
+            cuota_mensual = monto_financiado * (tasa_mensual * pow(1 + tasa_mensual, plazo_meses)) / (pow(1 + tasa_mensual, plazo_meses) - 1)
+
+            # Renderizar con el botón de proceder al pago
+            return render_template(
+                'financiamiento.html',
+                vehiculo=vehiculo,
+                monto_entrada=monto_entrada,
+                monto_financiado=monto_financiado,
+                tasa_interes_anual=tasa_interes_anual,
+                plazo_meses=plazo_meses,
+                cuota_mensual=round(cuota_mensual, 2),
+                mostrar_proceder_pago=True
+            )
+
+        # Renderizar la página inicial sin cálculos
+        return render_template(
+            'financiamiento.html',
+            vehiculo=vehiculo,
+            monto_entrada=monto_entrada,
+            monto_financiado=monto_financiado,
+            tasa_interes_anual=tasa_interes_anual,
+            plazo_meses=plazo_meses,
+            cuota_mensual=cuota_mensual,
+            mostrar_proceder_pago=False
+        )
+
+    except Exception as e:
+        print(f"Error al procesar financiamiento: {e}")
+        flash("Hubo un error al procesar el financiamiento.")
+        return redirect(url_for('inicio'))
+    finally:
+        conn.close()
+
+
+
+
+@app.route('/pago_inicial/<int:vehiculo_id>/<float:monto_entrada>', methods=['GET', 'POST'])
+@login_required
+def pago_inicial(vehiculo_id, monto_entrada):
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        print("Conexión a la base de datos exitosa.")
+
+        # Obtener detalles del vehículo
+        cursor.execute(f"SELECT id, marca, modelo, anio, precio FROM vehiculos WHERE id = {vehiculo_id}")
+        vehiculo = cursor.fetchone()
+        if not vehiculo:
+            flash("El vehículo no existe o ya ha sido vendido.")
+            return redirect(url_for('inicio'))
+
+        if request.method == 'POST':
+            # Validar datos de pago
+            nombre_tarjeta = request.form.get('nombre_tarjeta')
+            numero_tarjeta = request.form.get('numero_tarjeta')
+            fecha_expiracion = request.form.get('fecha_expiracion')
+            cvv = request.form.get('cvv')
+            if not all([nombre_tarjeta, numero_tarjeta, fecha_expiracion, cvv]):
+                flash("Por favor, completa todos los datos de pago.")
+                return render_template('pago_inicial.html', vehiculo=vehiculo, monto_entrada=monto_entrada)
+
+            try:
+                # Calcular monto financiado
+                precio_vehiculo = float(vehiculo[4])
+                monto_financiado = precio_vehiculo - monto_entrada
+
+                # Calcular cuota mensual
+                tasa_interes = 12.5  # Por ejemplo, puedes personalizar este valor
+                plazo_meses = 12  # También puedes personalizar
+                tasa_mensual = tasa_interes / 100 / 12
+                cuota_mensual = monto_financiado * (
+                    tasa_mensual * pow(1 + tasa_mensual, plazo_meses)
+                ) / (pow(1 + tasa_mensual, plazo_meses) - 1)
+
+                # Copiar los datos del vehículo a la tabla vehiculos_financiados
+                query_copiar_vehiculo = f"""
+                INSERT INTO vehiculos_financiados (usuario_id, vehiculo_id, marca, modelo, anio, precio)
+                VALUES ({current_user.id}, {vehiculo[0]}, '{vehiculo[1]}', '{vehiculo[2]}', {vehiculo[3]}, {vehiculo[4]})
+                """
+                print(f"Query de copia de vehículo: {query_copiar_vehiculo}")
+                cursor.execute(query_copiar_vehiculo)
+
+                # Registrar el financiamiento
+                query_financiamiento = f"""
+                INSERT INTO financiamientos (usuario_id, vehiculo_id, monto_financiado, tasa_interes, plazo_meses, pagos_restantes, cuota_mensual)
+                VALUES ({current_user.id}, {vehiculo[0]}, {monto_financiado}, {tasa_interes}, {plazo_meses}, {plazo_meses}, {cuota_mensual})
+                """
+                print(f"Query de financiamiento: {query_financiamiento}")
+                cursor.execute(query_financiamiento)
+
+                # Eliminar el vehículo de la tabla original
+                query_eliminar = f"DELETE FROM vehiculos WHERE id = {vehiculo_id}"
+                print(f"Query de eliminación de vehículo: {query_eliminar}")
+                cursor.execute(query_eliminar)
+
+                # Confirmar la transacción
+                conn.commit()
+                print("Transacción confirmada. Financiamiento registrado y vehículo eliminado.")
+
+                flash("¡Pago inicial realizado con éxito! El financiamiento está activo y el vehículo ha sido eliminado del inventario.")
+                return redirect(url_for('estado_financiamiento'))
+            except Exception as e:
+                print("Error durante la transacción:", e)
+                conn.rollback()
+                flash("Hubo un problema al procesar el pago inicial.")
+        return render_template('pago_inicial.html', vehiculo=vehiculo, monto_entrada=monto_entrada)
+    except Exception as e:
+        print("Error general:", e)
+        flash("Hubo un error al procesar el pago inicial.")
+        return redirect(url_for('inicio'))
+    finally:
+        conn.close()
+
+
+
+
+
+
+@app.route('/estado_financiamiento', methods=['GET'])
+@login_required
+def estado_financiamiento():
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('inicio'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Consultar financiamientos del usuario actual
+        query = f"""
+        SELECT f.id, f.monto_financiado, f.tasa_interes, f.plazo_meses, f.pagos_restantes, 
+               v.marca, v.modelo, v.anio, v.precio
+        FROM financiamientos AS f
+        LEFT JOIN vehiculos_financiados AS v ON f.vehiculo_id = v.vehiculo_id
+        WHERE f.usuario_id = {current_user.id}
+        """
+        cursor.execute(query)
+        financiamientos = cursor.fetchall()
+
+        # Renderizar la vista con los financiamientos del usuario
+        return render_template('estado_financiamiento.html', financiamientos=financiamientos)
+    except Exception as e:
+        print(f"Error al obtener los financiamientos: {e}")
+        flash("Hubo un error al cargar los financiamientos.")
+        return redirect(url_for('inicio'))
+    finally:
+        conn.close()
+
+@app.route('/realizar_pago/<int:financiamiento_id>', methods=['GET', 'POST'])
+@login_required
+def realizar_pago(financiamiento_id):
+    conn = conectar()
+    if not conn:
+        flash("No se pudo conectar a la base de datos.")
+        return redirect(url_for('estado_financiamiento'))
+
+    cursor = conn.cursor()
+
+    try:
+        # Obtener detalles del financiamiento
+        query = f"""
+        SELECT id, monto_financiado, pagos_restantes, cuota_mensual
+        FROM financiamientos
+        WHERE id = {financiamiento_id} AND usuario_id = {current_user.id}
+        """
+        cursor.execute(query)
+        financiamiento = cursor.fetchone()
+
+        if not financiamiento:
+            flash("El financiamiento no existe o no tienes acceso a él.")
+            return redirect(url_for('estado_financiamiento'))
+
+        # Desglosar los valores del financiamiento
+        monto_financiado = float(financiamiento[1])
+        pagos_restantes = financiamiento[2]
+        cuota_mensual = float(financiamiento[3])  # Cuota mensual fija desde la base de datos
+
+        # Procesar el formulario de pago
+        if request.method == 'POST':
+            try:
+                monto_pago = float(request.form.get('monto_pago', 0))  # Convertir a float
+            except ValueError:
+                flash("Por favor, introduce un monto de pago válido.")
+                return render_template('realizar_pago.html', financiamiento=financiamiento)
+
+            # Validar que el monto pagado sea igual a la cuota mensual
+            if round(monto_pago, 2) != round(cuota_mensual, 2):
+                flash(f"El monto de pago debe ser exactamente de ${'{:,.2f}'.format(cuota_mensual)}.")
+                return render_template('realizar_pago.html', financiamiento=financiamiento)
+
+            # Calcular el nuevo monto financiado y los pagos restantes
+            nuevo_monto_financiado = monto_financiado - monto_pago
+            nuevo_pagos_restantes = pagos_restantes - 1 if pagos_restantes > 0 else 0
+
+            try:
+                # Actualizar el financiamiento en la base de datos
+                query_actualizar = f"""
+                UPDATE financiamientos
+                SET monto_financiado = {nuevo_monto_financiado}, pagos_restantes = {nuevo_pagos_restantes}
+                WHERE id = {financiamiento_id}
+                """
+                cursor.execute(query_actualizar)
+                conn.commit()
+
+                flash("¡Pago registrado con éxito!")
+                return redirect(url_for('estado_financiamiento'))
+            except Exception as e:
+                print(f"Error al registrar el pago: {e}")
+                conn.rollback()
+                flash("Hubo un error al registrar el pago. Inténtalo nuevamente.")
+
+        # Renderizar la plantilla para realizar el pago
+        return render_template('realizar_pago.html', financiamiento=financiamiento, cuota_mensual=cuota_mensual)
+
+    except Exception as e:
+        print(f"Error al cargar el financiamiento: {e}")
+        flash("El monto de tu pago no corresponde con el permitido.")
+        return redirect(url_for('estado_financiamiento'))
+    finally:
+        conn.close()
+
+
+
 
 
 
