@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Financiamiento{% endblock %}
+
+{% block content %}
+<h2>Financiamiento del Vehículo</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">{{ vehiculo[1] }} {{ vehiculo[2] }}</h4>
+        <p><strong>Precio:</strong> ${{ "{:,.2f}".format(vehiculo[3]) }} MXN</p>
+    </div>
+</div>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="monto_entrada" class="form-label">Monto de Entrada</label>
+        <input type="number" class="form-control" id="monto_entrada" name="monto_entrada" value="{{ monto_entrada | default(0) }}" step="0.01" required>
+    </div>
+    <div class="mb-3">
+        <p><strong>Tasa de Interés Anual:</strong> {{ tasa_interes_anual | default(0) }}%</p>
+        <input type="hidden" id="tasa_interes" name="tasa_interes" value="{{ tasa_interes_anual | default(0) }}">
+    </div>
+    <div class="mb-3">
+        <p><strong>Plazo en Meses:</strong> {{ plazo_meses | default(0) }}</p>
+        <input type="hidden" id="plazo_meses" name="plazo_meses" value="{{ plazo_meses | default(0) }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Calcular Financiamiento</button>
+</form>
+
+{% if monto_financiado %}
+    <div class="mt-4">
+        <h4>Detalles del Financiamiento</h4>
+        <p><strong>Monto de Entrada:</strong> ${{ "{:,.2f}".format(monto_entrada | default(0)) }} MXN</p>
+        <p><strong>Monto Financiado:</strong> ${{ "{:,.2f}".format(monto_financiado | default(0)) }} MXN</p>
+        <p><strong>Cuota Mensual:</strong> ${{ "{:,.2f}".format(cuota_mensual | default(0)) }} MXN</p>
+    </div>
+{% endif %}
+
+{% if mostrar_proceder_pago %}
+    <a href="{{ url_for('pago_inicial', vehiculo_id=vehiculo[0], monto_entrada=monto_entrada) }}" class="btn btn-success mt-3">Proceder al Pago</a>
+{% endif %}
+
+<a href="{{ url_for('inicio') }}" class="btn btn-secondary mt-3">Volver</a>
+{% endblock %}

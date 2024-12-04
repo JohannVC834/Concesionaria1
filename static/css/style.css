@@ -87,3 +87,30 @@ body {
     padding: 10px;
     border-radius: 5px;
 }
+<style>
+    .btn-financiamiento {
+        display: inline-block;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-decoration: none;
+        color: white;
+        background-color: #007bff; /* Azul principal */
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-financiamiento:hover {
+        background-color: #0056b3; /* Azul más oscuro al pasar el ratón */
+        transform: scale(1.05); /* Efecto de aumento */
+    }
+
+    .btn-financiamiento:active {
+        background-color: #003f7f; /* Azul más oscuro al hacer clic */
+        box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
+        transform: scale(0.95); /* Efecto de clic */
+    }
+</style>

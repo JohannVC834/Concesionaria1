@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Realizar Pago{% endblock %}
+
+{% block content %}
+<h2>Realizar Pago</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Financiamiento #{{ financiamiento[0] }}</h4>
+        <p><strong>Monto Restante:</strong> ${{ "{:,.2f}".format(financiamiento[1]) }}</p>
+        <p><strong>Pagos Restantes:</strong> {{ financiamiento[2] }}</p>
+        <p><strong>Cuota Mensual:</strong> ${{ "{:,.2f}".format(cuota_mensual) }}</p>
+    </div>
+</div>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="monto_pago" class="form-label">Monto del Pago</label>
+        <input type="number" class="form-control" id="monto_pago" name="monto_pago" step="0.01" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Realizar Pago</button>
+    <a href="{{ url_for('estado_financiamiento') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

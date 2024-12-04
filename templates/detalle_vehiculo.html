@@ -48,6 +48,14 @@
         </form>
         
         <a href="{{ url_for('inicio') }}" class="btn btn-primary mt-3">Volver a la Lista</a>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <a href="{{ url_for('financiamiento', vehiculo_id=vehiculo[0]) }}" class="btn btn-primary mt-3">
+            Calcular Financiamiento
+        </a>
+        
+        
+
+
     </div>
 </div>
 

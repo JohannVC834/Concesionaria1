@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Pago Inicial{% endblock %}
+
+{% block content %}
+<h2>Pago Inicial para Financiamiento</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">{{ vehiculo[1] }} {{ vehiculo[2] }} ({{ vehiculo[3] }})</h4>
+        <p class="card-text"><strong>Precio:</strong> ${{ "{:,.2f}".format(vehiculo[4]) }} MXN</p>
+        <p class="card-text"><strong>Monto de Entrada:</strong> ${{ "{:,.2f}".format(monto_entrada) }} MXN</p>
+    </div>
+</div>
+
+<form method="POST">
+    <h4>Información de Pago</h4>
+    <div class="mb-3">
+        <label for="nombre_tarjeta" class="form-label">Nombre en la Tarjeta</label>
+        <input type="text" class="form-control" id="nombre_tarjeta" name="nombre_tarjeta" required>
+    </div>
+    <div class="mb-3">
+        <label for="numero_tarjeta" class="form-label">Número de Tarjeta</label>
+        <input type="text" class="form-control" id="numero_tarjeta" name="numero_tarjeta" required pattern="\d{16}">
+        <small class="form-text text-muted">Debe contener 16 dígitos.</small>
+    </div>
+    <div class="mb-3">
+        <label for="fecha_expiracion" class="form-label">Fecha de Expiración</label>
+        <input type="month" class="form-control" id="fecha_expiracion" name="fecha_expiracion" required>
+    </div>
+    <div class="mb-3">
+        <label for="cvv" class="form-label">CVV</label>
+        <input type="text" class="form-control" id="cvv" name="cvv" required pattern="\d{3}">
+        <small class="form-text text-muted">Debe contener 3 dígitos.</small>
+    </div>
+    <button type="submit" class="btn btn-primary">Finalizar Pago Inicial</button>
+    <a href="{{ url_for('inicio') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

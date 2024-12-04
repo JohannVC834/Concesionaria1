@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Estado de Financiamiento{% endblock %}
+
+{% block content %}
+<h2>Mis Financiamientos</h2>
+
+{% if financiamientos %}
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>#</th>
+                <th>Vehículo</th>
+                <th>Año</th>
+                <th>Precio Original</th>
+                <th>Monto Financiado</th>
+                <th>Tasa de Interés</th>
+                <th>Plazo (meses)</th>
+                <th>Pagos Restantes</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in financiamientos %}
+            <tr>
+                <td>{{ f[0] }}</td>
+                <td>{{ f[5] }} {{ f[6] }}</td>
+                <td>{{ f[7] }}</td>
+                <td>${{ "{:,.2f}".format(f[8]) }}</td>
+                <td>${{ "{:,.2f}".format(f[1]) }}</td>
+                <td>{{ f[2] }}%</td>
+                <td>{{ f[3] }}</td>
+                <td>{{ f[4] }}</td>
+                <td>
+                    {% if f[4] > 0 %}
+                    <a href="{{ url_for('realizar_pago', financiamiento_id=f[0]) }}" class="btn btn-success btn-sm">Realizar Pago</a>
+                    {% else %}
+                    <span class="text-success">Pagado</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No tienes financiamientos activos en este momento.</p>
+{% endif %}
+
+<a href="{{ url_for('inicio') }}" class="btn btn-primary mt-3">Volver al Inicio</a>
+{% endblock %}
